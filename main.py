@@ -1,3 +1,5 @@
+import scipy.ndimage
+
 try:
     import os
     import json
@@ -74,21 +76,43 @@ def main(argv=None):
     args = parser.parse_args(argv)
     default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
 
-    if args.dir is None:
-        args.dir = default_base
-    flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
+    # if args.dir is None:
+    #     args.dir = default_base
+    # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
+    #
+    # for image in flist:
+    #     json_fn = image.replace('_leftImg8bit.png', '_gtFine_polygons.json')
+    #
+    #     if not os.path.exists(json_fn):
+    #         json_fn = None
+    #     test_find_tfl_lights(image, json_fn)
 
-    for image in flist:
-        json_fn = image.replace('_leftImg8bit.png', '_gtFine_polygons.json')
+    # if len(flist):
+    #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
+    # else:
+    #     print("Bad configuration?? Didn't find any picture to show")
 
-        if not os.path.exists(json_fn):
-            json_fn = None
-        test_find_tfl_lights(image, json_fn)
+    image = np.array(Image.open("Test/pic.jfif").convert('L'))
+    new_image = image[25:61, 170: 200]
+    ramzor = new_image[3:34, 7:19]
 
-    if len(flist):
-        print("You should now see some images, with the ground truth marked on them. Close all to quit.")
-    else:
-        print("Bad configuration?? Didn't find any picture to show")
+    green_light = ramzor[10:15, 4:9]
+
+    # sum = 0
+    # for i in range(1, green_light.shape[0] - 1):
+    #     for j in range(1, green_light.shape[1] - 1):
+    #        sum += green_light[i][j]
+
+    kernel = [[-85, -85, -85, -85, -85],
+              [-85, 122, 139, 114, -85],
+              [-85, 167, 180, 154, -85],
+              [-85, 156, 166, 165, -85],
+              [-85, -85, -85, -85, -85]]
+
+    fig, ax = plt.subplots()
+    plt.imshow(scipy.ndimage.convolve(image, kernel))
+    # plt.imshow()
+    # print(scipy.ndimage.convolve(image, kernel))
     plt.show(block=True)
 
 
