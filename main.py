@@ -1,6 +1,5 @@
-import scipy.ndimage
-
 try:
+    import scipy
     import os
     import json
     import glob
@@ -62,6 +61,40 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
+def calSum(imageArr):
+    sum = 0
+    not_cal = 0
+    for row in imageArr:
+        for number in row:
+            if number > 100:
+                sum += number
+            else:
+                not_cal += 1
+    return sum, not_cal
+
+# def calSum2(imageArr):
+#     sum = 0
+#     for index_row, row in enumerate(imageArr):
+#         for index_col, number in enumerate(row):
+#             if number > 100:
+#                 sum += number
+#             else:
+#                 last_index = (index_row, index_col)
+#                 imageArr[index_row][index_col] = -sum
+#                 sum = 0
+#
+#     if sum > 0:
+#         imageArr[last_index[0]][last_index[1]] +=sum
+#
+#     return imageArr
+
+def normalize(to_add, image):
+
+    for index_row, row in enumerate(image):
+        for index_col, number in enumerate(row):
+            if number < 100:
+                image[index_row][index_col] = to_add * 1
+    return image
 
 def main(argv=None):
     """It's nice to have a standalone tester for the algorithm.
@@ -69,6 +102,7 @@ def main(argv=None):
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
+<<<<<<< Updated upstream
     parser = argparse.ArgumentParser("Test TFL attention mechanism")
     parser.add_argument('-i', '--image', type=str, help='Path to an image')
     parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
@@ -76,6 +110,15 @@ def main(argv=None):
     args = parser.parse_args(argv)
     default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
 
+=======
+    # parser = argparse.ArgumentParser("Test TFL attention mechanism")
+    # parser.add_argument('-i', '--image', type=str, help='Path to an image')
+    # parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
+    # parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
+    # args = parser.parse_args(argv)
+    # default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
+    #
+>>>>>>> Stashed changes
     # if args.dir is None:
     #     args.dir = default_base
     # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
@@ -86,11 +129,16 @@ def main(argv=None):
     #     if not os.path.exists(json_fn):
     #         json_fn = None
     #     test_find_tfl_lights(image, json_fn)
+<<<<<<< Updated upstream
 
+=======
+    #
+>>>>>>> Stashed changes
     # if len(flist):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
+<<<<<<< Updated upstream
 
     image = np.array(Image.open("Test/pic.jfif").convert('L'))
     new_image = image[25:61, 170: 200]
@@ -114,6 +162,23 @@ def main(argv=None):
     # plt.imshow()
     # print(scipy.ndimage.convolve(image, kernel))
     plt.show(block=True)
+=======
+    # plt.show(block=True)
+    image = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
+    plt.imshow(image)
+    new_image = image[210:265, 1085:1115]
+    sum, to_divide = calSum(new_image)
+    neg_value = sum / to_divide
+    normalize_image = normalize(int(-neg_value), new_image)
+    print(new_image)
+    # kernel = calSum2(new_image)
+    kerneled_image = scipy.signal.convolve(image, normalize_image, mode='same')
+    plt.imshow(kerneled_image)
+    print(new_image)
+    plt.show()
+
+
+>>>>>>> Stashed changes
 
 
 if __name__ == '__main__':
