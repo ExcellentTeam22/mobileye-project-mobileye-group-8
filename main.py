@@ -1,3 +1,5 @@
+THRESHOLD = 200
+
 try:
     import scipy
     import os
@@ -62,30 +64,59 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
+def normalize_kernel(kernel_before_normalization):
+    matrix_sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
+    neg_value = matrix_sum / to_divide
+    kernel = decrease_values(int(-neg_value), kernel_before_normalization)
+    return kernel
+
+
 def calculate_matrix_sum(image_arr):
     cells_in_threshold_sum = 0
     cells_not_in_threshold = 0
 
     for row in image_arr:
         for number in row:
-            if number > 100:
+            if number > THRESHOLD:
                 cells_in_threshold_sum += number
             else:
                 cells_not_in_threshold += 1
     return cells_in_threshold_sum, cells_not_in_threshold
 
 
-def normalized_kernel(neg_value: int, kernel):
+def decrease_values(neg_value: int, kernel):
 
     for index_row, row in enumerate(kernel):
         for index_col, number in enumerate(row):
-            if number < 100:
+            if number <= THRESHOLD:
                 kernel[index_row][index_col] = neg_value
     return kernel
 
 
-def kernels_unions():
-    pass
+def display_figures(original_image, grey_scaling_image, convolution_image):
+    # Displays original image and the convolution image.
+    fig = plt.figure()
+    ax = fig.add_subplot(3, 1, 1)
+    ax.imshow(original_image)
+    ax.autoscale(False)
+    ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
+    ax2.imshow(grey_scaling_image)
+    ax2.autoscale(False)
+    ax3 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
+    ax3.imshow(convolution_image)
+    ax3.autoscale(False)
+
+
+def display_img_and_convolve_image(paths: list, kernel):
+    for path in paths:
+        original_image = Image.open(path)
+        original_image_array = np.array(original_image)
+        red_filter = original_image_array.copy()
+        red_filter[:, :, (1, 2)] = 0
+
+        grey_scaling_image = np.array(Image.fromarray(red_filter).convert('L'), np.float64)
+        convolve_image = scipy.signal.convolve(grey_scaling_image.copy(), kernel, mode='same')
+        display_figures(red_filter, grey_scaling_image, convolve_image)
 
 
 def main(argv=None):
@@ -93,6 +124,26 @@ def main(argv=None):
     Consider looping over some images from here, so you can manually exmine the results
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
+
+    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
+    kernel_before_normalization = image_array[226:230, 1097:1102].copy()
+
+    kernel = normalize_kernel(kernel_before_normalization)
+
+    paths = ['Test/berlin_000455_000019_leftImg8bit.png',
+             'Test/berlin_000522_000019_leftImg8bit.png',
+             'Test/berlin_000526_000019_leftImg8bit.png',
+             'Test/berlin_000540_000019_leftImg8bit.png']
+
+    display_img_and_convolve_image(paths, kernel)
+
+
+
+
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    ax.imshow(kernel)
+    plt.show(block=True)
 
     # parser = argparse.ArgumentParser("Test TFL attention mechanism")
     # parser.add_argument('-i', '--image', type=str, help='Path to an image')
@@ -116,27 +167,6 @@ def main(argv=None):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
-
-
-    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    kernel_before_normalization = image_array[210:265, 1085:1115].copy()
-
-    # Normalize kernel section
-    sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
-    neg_value = sum / to_divide
-    kernel = normalized_kernel(int(-neg_value), kernel_before_normalization)
-
-    convolution_image = scipy.signal.convolve(image_array.copy(), kernel, mode='same')
-
-    # Displays original image and the convolution image.
-    fig = plt.figure()
-    ax = fig.add_subplot(2, 1, 1)
-    ax.imshow(image_array)
-    ax.autoscale(False)
-    ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(convolution_image)
-    ax2.autoscale(False)
-    plt.show(block=True)
 
 
 if __name__ == '__main__':
