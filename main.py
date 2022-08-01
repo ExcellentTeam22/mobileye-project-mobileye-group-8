@@ -102,15 +102,7 @@ def main(argv=None):
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
-<<<<<<< Updated upstream
-    parser = argparse.ArgumentParser("Test TFL attention mechanism")
-    parser.add_argument('-i', '--image', type=str, help='Path to an image')
-    parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
-    parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
-    args = parser.parse_args(argv)
-    default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
 
-=======
     # parser = argparse.ArgumentParser("Test TFL attention mechanism")
     # parser.add_argument('-i', '--image', type=str, help='Path to an image')
     # parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
@@ -118,7 +110,6 @@ def main(argv=None):
     # args = parser.parse_args(argv)
     # default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
     #
->>>>>>> Stashed changes
     # if args.dir is None:
     #     args.dir = default_base
     # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
@@ -129,16 +120,13 @@ def main(argv=None):
     #     if not os.path.exists(json_fn):
     #         json_fn = None
     #     test_find_tfl_lights(image, json_fn)
-<<<<<<< Updated upstream
 
-=======
-    #
->>>>>>> Stashed changes
+
+
     # if len(flist):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
-<<<<<<< Updated upstream
 
     image = np.array(Image.open("Test/pic.jfif").convert('L'))
     new_image = image[25:61, 170: 200]
@@ -151,34 +139,49 @@ def main(argv=None):
     #     for j in range(1, green_light.shape[1] - 1):
     #        sum += green_light[i][j]
 
-    kernel = [[-85, -85, -85, -85, -85],
-              [-85, 122, 139, 114, -85],
-              [-85, 167, 180, 154, -85],
-              [-85, 156, 166, 165, -85],
-              [-85, -85, -85, -85, -85]]
+
 
     fig, ax = plt.subplots()
-    plt.imshow(scipy.ndimage.convolve(image, kernel))
+    #plt.imshow(scipy.ndimage.convolve(image, kernel))
     # plt.imshow()
     # print(scipy.ndimage.convolve(image, kernel))
-    plt.show(block=True)
-=======
+    #plt.show(block=True)
+
     # plt.show(block=True)
     image = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    plt.imshow(image)
+
+    # plt.imshow(image)
+    # plt.show()
     new_image = image[210:265, 1085:1115]
+
     sum, to_divide = calSum(new_image)
-    neg_value = sum / to_divide
+    neg_value = (sum / to_divide)
     normalize_image = normalize(int(-neg_value), new_image)
+
+
+
+    plt.imshow(normalize_image)
+    plt.show()
     print(new_image)
-    # kernel = calSum2(new_image)
+
     kerneled_image = scipy.signal.convolve(image, normalize_image, mode='same')
-    plt.imshow(kerneled_image)
-    print(new_image)
+
+    # plt.imshow(kerneled_image)
+    # print(new_image)
+    # plt.show()
+
+    fig = plt.figure()
+    ax = fig.add_subplot(2, 1, 1)
+    ax.imshow(image)
+    ax.autoscale(False)
+    ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
+    ax2.imshow(kerneled_image)
+    ax2.autoscale(False)
     plt.show()
 
 
->>>>>>> Stashed changes
+
+
 
 
 if __name__ == '__main__':
