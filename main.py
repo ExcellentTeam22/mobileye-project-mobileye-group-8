@@ -64,31 +64,31 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
-def normalize_kernel(kernel_before_normalization):
-    matrix_sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
+def normalize_kernel(kernel_before_normalization, threshold):
+    matrix_sum, to_divide = calculate_matrix_sum(kernel_before_normalization, threshold)
     neg_value = matrix_sum / to_divide
-    kernel = decrease_values(int(-neg_value), kernel_before_normalization)
+    kernel = decrease_values(-neg_value, kernel_before_normalization, threshold)
     return kernel
 
+def calculate_matrix_sum(image_arr, threshold):
 
-def calculate_matrix_sum(image_arr):
     cells_in_threshold_sum = 0
     cells_not_in_threshold = 0
 
     for row in image_arr:
         for number in row:
-            if number > THRESHOLD:
+            if number > threshold:
                 cells_in_threshold_sum += number
             else:
                 cells_not_in_threshold += 1
     return cells_in_threshold_sum, cells_not_in_threshold
 
 
-def decrease_values(neg_value: int, kernel):
+def decrease_values(neg_value, kernel, threshold):
 
     for index_row, row in enumerate(kernel):
         for index_col, number in enumerate(row):
-            if number <= THRESHOLD:
+            if number <= threshold:
                 kernel[index_row][index_col] = neg_value
     return kernel
 
@@ -107,16 +107,19 @@ def display_figures(original_image, grey_scaling_image, convolution_image):
     ax3.autoscale(False)
 
 
-def display_img_and_convolve_image(paths: list, kernel):
+def display_img_and_convolve_image(paths: list, kernel_red_light, kernel_green_light):
     for path in paths:
-        original_image = Image.open(path)
-        original_image_array = np.array(original_image)
-        red_filter = original_image_array.copy()
-        red_filter[:, :, (1, 2)] = 0
+        original_image = np.array(Image.open(path))
 
-        grey_scaling_image = np.array(Image.fromarray(red_filter).convert('L'), np.float64)
-        convolve_image = scipy.signal.convolve(grey_scaling_image.copy(), kernel, mode='same')
-        display_figures(red_filter, grey_scaling_image, convolve_image)
+        convolution_image_red = scipy.signal.convolve(original_image[:, :, 0].copy(), kernel_red_light, mode='same')
+        convolution_image_green = scipy.signal.convolve(original_image[:, :, 1].copy(), kernel_green_light, mode='same')
+
+        display_figures(original_image, convolution_image_red, convolution_image_green)
+
+
+def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
+    kernel_before_normalization = image[start_y:end_y, start_x:end_x].copy()
+    return normalize_kernel(kernel_before_normalization, threshold)
 
 
 def main(argv=None):
@@ -125,24 +128,20 @@ def main(argv=None):
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
-    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    kernel_before_normalization = image_array[226:230, 1097:1102].copy()
-
-    kernel = normalize_kernel(kernel_before_normalization)
+    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png'), np.float64)
+    image_array3 = np.array(Image.open('Test/berlin_000455_000019_leftImg8bit.png'), np.float64)
+    kernel_red_light = kernels_creator(image_array[:, :, 0], start_y=217, end_y=231, start_x=1093, end_x=1105,
+                                       threshold=220)
+    kernel_green_light = kernels_creator(image_array3[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
+                                         threshold=180)
 
     paths = ['Test/berlin_000455_000019_leftImg8bit.png',
              'Test/berlin_000522_000019_leftImg8bit.png',
              'Test/berlin_000526_000019_leftImg8bit.png',
              'Test/berlin_000540_000019_leftImg8bit.png']
 
-    display_img_and_convolve_image(paths, kernel)
+    display_img_and_convolve_image(paths, kernel_red_light, kernel_green_light)
 
-
-
-
-    fig = plt.figure()
-    ax = fig.add_subplot()
-    ax.imshow(kernel)
     plt.show(block=True)
 
     # parser = argparse.ArgumentParser("Test TFL attention mechanism")
