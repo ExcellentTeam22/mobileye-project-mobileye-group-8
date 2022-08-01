@@ -61,40 +61,28 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(red_x, red_y, 'ro', color='r', markersize=4)
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
-def calSum(imageArr):
-    sum = 0
-    not_cal = 0
-    for row in imageArr:
+
+def calculate_matrix_sum(image_arr):
+    cells_in_threshold_sum = 0
+    cells_not_in_threshold = 0
+
+    for row in image_arr:
         for number in row:
             if number > 100:
-                sum += number
+                cells_in_threshold_sum += number
             else:
-                not_cal += 1
-    return sum, not_cal
+                cells_not_in_threshold += 1
+    return cells_in_threshold_sum, cells_not_in_threshold
 
-# def calSum2(imageArr):
-#     sum = 0
-#     for index_row, row in enumerate(imageArr):
-#         for index_col, number in enumerate(row):
-#             if number > 100:
-#                 sum += number
-#             else:
-#                 last_index = (index_row, index_col)
-#                 imageArr[index_row][index_col] = -sum
-#                 sum = 0
-#
-#     if sum > 0:
-#         imageArr[last_index[0]][last_index[1]] +=sum
-#
-#     return imageArr
 
-def normalize(to_add, image):
+def normalized_kernel(neg_value: int, kernel):
 
-    for index_row, row in enumerate(image):
+    for index_row, row in enumerate(kernel):
         for index_col, number in enumerate(row):
             if number < 100:
-                image[index_row][index_col] = to_add * 1
-    return image
+                kernel[index_row][index_col] = neg_value
+    return kernel
+
 
 def main(argv=None):
     """It's nice to have a standalone tester for the algorithm.
@@ -102,23 +90,12 @@ def main(argv=None):
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
-<<<<<<< Updated upstream
-    parser = argparse.ArgumentParser("Test TFL attention mechanism")
-    parser.add_argument('-i', '--image', type=str, help='Path to an image')
-    parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
-    parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
-    args = parser.parse_args(argv)
-    default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
-
-=======
     # parser = argparse.ArgumentParser("Test TFL attention mechanism")
     # parser.add_argument('-i', '--image', type=str, help='Path to an image')
     # parser.add_argument("-j", "--json", type=str, help="Path to json GT for comparison")
     # parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     # args = parser.parse_args(argv)
     # default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
-    #
->>>>>>> Stashed changes
     # if args.dir is None:
     #     args.dir = default_base
     # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
@@ -129,56 +106,24 @@ def main(argv=None):
     #     if not os.path.exists(json_fn):
     #         json_fn = None
     #     test_find_tfl_lights(image, json_fn)
-<<<<<<< Updated upstream
-
-=======
-    #
->>>>>>> Stashed changes
     # if len(flist):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
-<<<<<<< Updated upstream
 
-    image = np.array(Image.open("Test/pic.jfif").convert('L'))
-    new_image = image[25:61, 170: 200]
-    ramzor = new_image[3:34, 7:19]
 
-    green_light = ramzor[10:15, 4:9]
+    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
+    kernel_before_normalization = image_array[210:265, 1085:1115]
 
-    # sum = 0
-    # for i in range(1, green_light.shape[0] - 1):
-    #     for j in range(1, green_light.shape[1] - 1):
-    #        sum += green_light[i][j]
-
-    kernel = [[-85, -85, -85, -85, -85],
-              [-85, 122, 139, 114, -85],
-              [-85, 167, 180, 154, -85],
-              [-85, 156, 166, 165, -85],
-              [-85, -85, -85, -85, -85]]
-
-    fig, ax = plt.subplots()
-    plt.imshow(scipy.ndimage.convolve(image, kernel))
-    # plt.imshow()
-    # print(scipy.ndimage.convolve(image, kernel))
-    plt.show(block=True)
-=======
-    # plt.show(block=True)
-    image = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    plt.imshow(image)
-    new_image = image[210:265, 1085:1115]
-    sum, to_divide = calSum(new_image)
+    # Normalize kernel section
+    sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
     neg_value = sum / to_divide
-    normalize_image = normalize(int(-neg_value), new_image)
-    print(new_image)
-    # kernel = calSum2(new_image)
-    kerneled_image = scipy.signal.convolve(image, normalize_image, mode='same')
-    plt.imshow(kerneled_image)
-    print(new_image)
-    plt.show()
+    kernel = normalized_kernel(int(-neg_value), kernel_before_normalization)
 
+    convolution_image = scipy.signal.convolve(image_array, kernel, mode='same')
+    plt.imshow(convolution_image)
 
->>>>>>> Stashed changes
+    plt.show(block=True)
 
 
 if __name__ == '__main__':
