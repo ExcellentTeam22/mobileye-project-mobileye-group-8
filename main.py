@@ -96,6 +96,7 @@ def main(argv=None):
     # parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     # args = parser.parse_args(argv)
     # default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
+
     # if args.dir is None:
     #     args.dir = default_base
     # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
@@ -106,6 +107,7 @@ def main(argv=None):
     #     if not os.path.exists(json_fn):
     #         json_fn = None
     #     test_find_tfl_lights(image, json_fn)
+
     # if len(flist):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
@@ -121,7 +123,15 @@ def main(argv=None):
     kernel = normalized_kernel(int(-neg_value), kernel_before_normalization)
 
     convolution_image = scipy.signal.convolve(image_array, kernel, mode='same')
-    plt.imshow(convolution_image)
+
+    # Displays original image and the convolution image.
+    fig = plt.figure()
+    ax = fig.add_subplot(2, 1, 1)
+    ax.imshow(image_array)
+    ax.autoscale(False)
+    ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
+    ax2.imshow(convolution_image)
+    ax2.autoscale(False)
 
     plt.show(block=True)
 
