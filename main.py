@@ -62,26 +62,33 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
-def calculate_matrix_sum(image_arr):
+def calculate_matrix_sum(image_arr, treshold):
     cells_in_threshold_sum = 0
     cells_not_in_threshold = 0
 
     for row in image_arr:
         for number in row:
-            if number > 100:
+            if number > treshold:
                 cells_in_threshold_sum += number
             else:
                 cells_not_in_threshold += 1
     return cells_in_threshold_sum, cells_not_in_threshold
 
 
-def normalized_kernel(neg_value: int, kernel):
-
+def normalized_kernel(neg_value, kernel, treshold):
     for index_row, row in enumerate(kernel):
         for index_col, number in enumerate(row):
-            if number < 100:
+            if number <= treshold:
                 kernel[index_row][index_col] = neg_value
     return kernel
+
+
+def kernels_creator(image, start_y, end_y, start_x, end_x, treshold):
+    kernel_before_normalization = image[start_y:end_y, start_x:end_x].copy()
+    plt.imshow(kernel_before_normalization)
+    sum_of_goods, to_divide = calculate_matrix_sum(kernel_before_normalization, treshold)
+    neg_value = float(sum_of_goods / to_divide)
+    return normalized_kernel(-neg_value, kernel_before_normalization, treshold)
 
 
 def kernels_unions():
@@ -117,25 +124,28 @@ def main(argv=None):
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
 
-
     image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    kernel_before_normalization = image_array[210:265, 1085:1115].copy()
+    image_array2 = np.array(Image.open('Test/bremen_000145_000019_leftImg8bit.png').convert('L'), np.float64)
+    # kernel_before_normalization = image_array2[80:100, 980:1005].copy()
+    image_array3 = np.array(Image.open('Test/berlin_000455_000019_leftImg8bit.png').convert('L'), np.float64)
+    kernel_red_light = kernels_creator(image_array, start_y=217, end_y=231, start_x=1093, end_x=1105, treshold=220)
+    kernel_green_light = kernels_creator(image_array3, start_y=284, end_y=292, start_x=830, end_x=837, treshold=180)
 
-    # Normalize kernel section
-    sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
-    neg_value = sum / to_divide
-    kernel = normalized_kernel(int(-neg_value), kernel_before_normalization)
 
-    convolution_image = scipy.signal.convolve(image_array.copy(), kernel, mode='same')
+    convolution_image_red = scipy.signal.convolve(image_array2.copy(), kernel_red_light, mode='same')
+    convolution_image_green = scipy.signal.convolve(image_array2.copy(), kernel_green_light, mode='same')
 
     # Displays original image and the convolution image.
     fig = plt.figure()
     ax = fig.add_subplot(2, 1, 1)
-    ax.imshow(image_array)
+    ax.imshow(image_array2)
     ax.autoscale(False)
     ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(convolution_image)
+    ax2.imshow(convolution_image_green)
     ax2.autoscale(False)
+    fig1 = plt.figure()
+    ax3 = fig1.add_subplot()
+    ax3.imshow(kernel_red_light)
     plt.show(block=True)
 
 
