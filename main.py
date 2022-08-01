@@ -84,6 +84,10 @@ def normalized_kernel(neg_value: int, kernel):
     return kernel
 
 
+def kernels_unions():
+    pass
+
+
 def main(argv=None):
     """It's nice to have a standalone tester for the algorithm.
     Consider looping over some images from here, so you can manually exmine the results
@@ -115,14 +119,14 @@ def main(argv=None):
 
 
     image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    kernel_before_normalization = image_array[210:265, 1085:1115]
+    kernel_before_normalization = image_array[210:265, 1085:1115].copy()
 
     # Normalize kernel section
     sum, to_divide = calculate_matrix_sum(kernel_before_normalization)
     neg_value = sum / to_divide
     kernel = normalized_kernel(int(-neg_value), kernel_before_normalization)
 
-    convolution_image = scipy.signal.convolve(image_array, kernel, mode='same')
+    convolution_image = scipy.signal.convolve(image_array.copy(), kernel, mode='same')
 
     # Displays original image and the convolution image.
     fig = plt.figure()
@@ -132,7 +136,6 @@ def main(argv=None):
     ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
     ax2.imshow(convolution_image)
     ax2.autoscale(False)
-
     plt.show(block=True)
 
 
