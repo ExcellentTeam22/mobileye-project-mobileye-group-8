@@ -124,25 +124,31 @@ def main(argv=None):
     # else:
     #     print("Bad configuration?? Didn't find any picture to show")
 
-    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png').convert('L'), np.float64)
-    image_array2 = np.array(Image.open('Test/bremen_000145_000019_leftImg8bit.png').convert('L'), np.float64)
+    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png'), np.float64)
+    image_array2 = np.array(Image.open('Test/hamburg_000000_067799_leftImg8bit.png'), np.float64)
     # kernel_before_normalization = image_array2[80:100, 980:1005].copy()
-    image_array3 = np.array(Image.open('Test/berlin_000455_000019_leftImg8bit.png').convert('L'), np.float64)
-    kernel_red_light = kernels_creator(image_array, start_y=217, end_y=231, start_x=1093, end_x=1105, treshold=220)
-    kernel_green_light = kernels_creator(image_array3, start_y=284, end_y=292, start_x=830, end_x=837, treshold=180)
+    image_array3 = np.array(Image.open('Test/berlin_000455_000019_leftImg8bit.png'), np.float64)
+    kernel_red_light = kernels_creator(image_array[:, :, 0], start_y=217, end_y=231, start_x=1093, end_x=1105,
+                                       treshold=220)
+    kernel_green_light = kernels_creator(image_array3[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
+                                         treshold=180)
+    print(image_array3[:,:,1].shape)
 
-
-    convolution_image_red = scipy.signal.convolve(image_array2.copy(), kernel_red_light, mode='same')
-    convolution_image_green = scipy.signal.convolve(image_array2.copy(), kernel_green_light, mode='same')
+    convolution_image_red = scipy.signal.convolve(image_array2[:, :, 0].copy(), kernel_red_light, mode='same')
+    convolution_image_green = scipy.signal.convolve(image_array2[:, :, 1].copy(), kernel_green_light, mode='same')
 
     # Displays original image and the convolution image.
     fig = plt.figure()
-    ax = fig.add_subplot(2, 1, 1)
+    ax = fig.add_subplot(3, 1, 1)
     ax.imshow(image_array2)
     ax.autoscale(False)
-    ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(convolution_image_green)
+    ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
+    ax2.imshow(convolution_image_red)
     ax2.autoscale(False)
+    ax4 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
+    ax4.imshow(convolution_image_green)
+    ax4.autoscale(False)
+
     fig1 = plt.figure()
     ax3 = fig1.add_subplot()
     ax3.imshow(kernel_red_light)
