@@ -90,8 +90,6 @@ def display_figures(original_image, convolution_image_red, convolution_image_gre
     plt.imshow(original_image)
     if(len(filtered_green_lights)!=0):
         plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
-    if (len(filtered_red_lights) != 0):
-        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
     plt.autoscale(False)
     plt.axis('off')
     plt.title("result")
