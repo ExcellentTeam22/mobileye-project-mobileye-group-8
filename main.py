@@ -42,17 +42,17 @@ def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
     return Kernel(threshold, image[start_y:end_y, start_x:end_x].copy())
 
 
-def display_figures(original_image, grey_scaling_image, convolution_image):
-    # Displays original image and the convolution image.
+def display_figures(original_image, convolution_image_red, convolution_image_green):
+    # Displays original image and the convolutions images.
     fig = plt.figure()
     ax = fig.add_subplot(3, 1, 1)
     ax.imshow(original_image)
     ax.autoscale(False)
     ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(grey_scaling_image)
+    ax2.imshow(convolution_image_red)
     ax2.autoscale(False)
     ax3 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
-    ax3.imshow(convolution_image)
+    ax3.imshow(convolution_image_green)
     ax3.autoscale(False)
 
 
@@ -63,27 +63,26 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :param kwargs: Whatever config you want to pass in here
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
-    ### WRITE YOUR CODE HERE ###
-    ### USE HELPER FUNCTIONS ###
 
+    # Performs the convolution process on the red dimension and the green dimension of the image separately.
     convolution_image_red = kwargs["kernel_red_light"].convolution(c_image[:, :, 0].copy())
     convolution_image_green = kwargs["kernel_green_light"].convolution(c_image[:, :, 1].copy())
 
     display_figures(c_image, convolution_image_red, convolution_image_green)
 
-    new_conv = maximum_filter(convolution_image_green, 5)
+    # new_conv = maximum_filter(convolution_image_green, 5)
 
-    c = np.argwhere( new_conv > 100000 )
-
-    for y, x in c:
-        print(y, x, new_conv[y][x])
-    print(c)
-
-    plt.imshow(new_conv)
-    plt.plot(c[:, 1], c[:, 0], 'r.')
-    plt.autoscale(False)
-    plt.axis('off')
-    plt.show()
+    # c = np.argwhere(new_conv > 100000)
+    #
+    # for y, x in c:
+    #     print(y, x, new_conv[y][x])
+    # print(c)
+    #
+    # plt.imshow(new_conv)
+    # plt.plot(c[:, 1], c[:, 0], 'r.')
+    # plt.autoscale(False)
+    # plt.axis('off')
+    # plt.show()
 
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
 
@@ -127,11 +126,12 @@ def main(argv=None):
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
-    image_array = open_image_as_np_array('Test/berlin_000540_000019_leftImg8bit.png')
-    image_array3 = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
-    kernel_red_light = kernels_creator(image_array[:, :, 0], start_y=217, end_y=231, start_x=1093, end_x=1105,
+    # Builds the red and the green kernels.
+    image_for_red_kernel = open_image_as_np_array('Test/berlin_000540_000019_leftImg8bit.png')
+    image_for_green_kernel = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
+    kernel_red_light = kernels_creator(image_for_red_kernel[:, :, 0], start_y=217, end_y=231, start_x=1093, end_x=1105,
                                        threshold=220)
-    kernel_green_light = kernels_creator(image_array3[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
+    kernel_green_light = kernels_creator(image_for_green_kernel[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
                                          threshold=180)
 
     paths = ['Test/berlin_000522_000019_leftImg8bit.png',
