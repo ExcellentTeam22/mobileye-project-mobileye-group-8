@@ -65,8 +65,8 @@ def display_figures(original_image, convolution_image_red, convolution_image_gre
 
     fig.add_subplot(rows, cols, 4)
     plt.imshow(original_image)
-    # plt.plot(green_lights[:, 1], green_lights[:, 0], 'g.')
-    plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+    if (len(filtered_red_lights) != 0):
+        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
     plt.autoscale(False)
     plt.axis('off')
     plt.title('result')
@@ -88,36 +88,25 @@ def display_figures(original_image, convolution_image_red, convolution_image_gre
 
     fig.add_subplot(rows, cols, 8)
     plt.imshow(original_image)
-    plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
+    if(len(filtered_green_lights)!=0):
+        plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
+    if (len(filtered_red_lights) != 0):
+        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
     plt.autoscale(False)
     plt.axis('off')
     plt.title("result")
     plt.show()
 
-    # plt.imshow(original_image)
-    # plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
-    # plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
-    # plt.autoscale(False)
-    # plt.axis('off')
-    # plt.show()
+    plt.imshow(original_image)
+    if (len(filtered_green_lights) != 0):
+        plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
+    if (len(filtered_red_lights) != 0):
+        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+    plt.autoscale(False)
+    plt.axis('off')
+    plt.show()
 
-    # plt.imshow(original_image)
-    # plt.show()
-    # plt.imshow(max_red)
-    # plt.show()
-    # fig = plt.figure()
-    # ax = fig.add_subplot(2, 1, 1)
-    # ax.imshow(original_image)
-    # ax.autoscale(False)
-    # ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
-    # ax2.imshow(original_image)
-    # print(red_lights)
-    # if len(green_lights) != 0:
-    #     plt.plot(green_lights[:, 1], green_lights[:, 0], 'g.')
-    # if len(red_lights) != 0:
-    #     plt.plot(red_lights[:, 1], red_lights[:, 0], 'r.')
-    # ax2.autoscale(False)
-    # plt.show()
+
 
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
@@ -141,19 +130,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     display_figures(c_image, convolution_image_red, convolution_image_green,max_red,max_green,filtered_red_lights,filtered_green_lights)
 
 
-    # new_conv = maximum_filter(convolution_image_green, 5)
 
-    # c = np.argwhere(new_conv > 100000)
-    #
-    # for y, x in c:
-    #     print(y, x, new_conv[y][x])
-    # print(c)
-    #
-    # plt.imshow(new_conv)
-    # plt.plot(c[:, 1], c[:, 0], 'r.')
-    # plt.autoscale(False)
-    # plt.axis('off')
-    # plt.show()
 
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
 
