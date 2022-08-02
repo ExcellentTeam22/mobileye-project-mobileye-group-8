@@ -66,7 +66,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
 
     red_with_info, red_tfl = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000, kwargs["path"], "Red")
-    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 70000, kwargs["path"], "Green")
+    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000, kwargs["path"], "Green")
 
     tfl_with_info = list()
 
@@ -175,12 +175,13 @@ def main(argv=None):
     :param argv: In case you want to programmatically run this"""
 
     # Builds the red and the green kernels.
-    image_for_green_kernel = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
+    image_for_red_kernel = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
 
-    kernel_red_light = kernels_creator(image_for_green_kernel[:, :, 0], start_y=257, end_y=265, start_x=1124, end_x=1133,
+    kernel_red_light = kernels_creator(image_for_red_kernel[:, :, 0], start_y=257, end_y=265, start_x=1124, end_x=1133,
                                        threshold=232)
-    kernel_green_light = kernels_creator(image_for_green_kernel[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
-                                         threshold=180)
+    kernel_green_light = kernels_creator(image_for_red_kernel[:, :, 1], start_y=257, end_y=265, start_x=1124,
+                                         end_x=1133,
+                                         threshold=232)
 
     paths = ['Test/berlin_000540_000019_leftImg8bit.png',
              'Test/berlin_000522_000019_leftImg8bit.png',
