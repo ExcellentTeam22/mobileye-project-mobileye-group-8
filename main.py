@@ -1,3 +1,4 @@
+from DataBase import DataBase
 from Kernel import Kernel
 
 try:
@@ -6,6 +7,7 @@ try:
     import json
     import glob
     import argparse
+    import pandas as pd
 
     import numpy as np
     from scipy import signal as sg
@@ -64,27 +66,46 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
 
+    red_with_info, red_tfl = find_light_coordinates(c_image, kwargs["kernel_red_light"], 2000000, kwargs["path"], "Red")
+    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 100000, kwargs["path"], "Green")
+
+    tfl_with_info = np.concatenate([red_with_info, green_with_info])
+
+    current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "y-coordinate", "x-coordinate",
+                                                              "light", "RGB", "pixel_light"])
+
+    db = DataBase()
+    db.add(current_data_frame)
+
+    return red_tfl[:, 0], red_tfl[:, 1], green_tfl[:, 0], green_tfl[:, 1]
+
+
+def find_light_coordinates(image: np.array, kernel: Kernel, threshold: int, image_name: str, light_color: str):
+    """
+    The function get an image and a kernel and return all the coordinates in the image that
+    meet the given threshold after a maximum filter operation.
+    In addition the function return a list of the coordinates and information for each of them.
+    :param image: Original image to convolve.
+    :param kernel: A kernel for the convolution process.
+    :param threshold: A threshold to extract relevant coordinates.
+    :param image_name: The name of the original image.
+    :param light_color: The color of the requested light.
+    :return: Tuple of two list, one for the coordinates and another for the coordinates with information.
+    """
     # Performs the convolution process on the red dimension and the green dimension of the image separately.
-    convolution_image_red = kwargs["kernel_red_light"].convolution(c_image[:, :, 0].copy())
-    convolution_image_green = kwargs["kernel_green_light"].convolution(c_image[:, :, 1].copy())
+    convolution_image_red = kernel.convolution(image[:, :, 0].copy())
 
-    display_figures(c_image, convolution_image_red, convolution_image_green)
+    tfl = np.argwhere(maximum_filter(convolution_image_red, 5) > threshold)
 
-    # new_conv = maximum_filter(convolution_image_green, 5)
+    tfl_with_info = list(map(lambda coordinate: [image_name,
+                                                 coordinate[0],
+                                                 coordinate[1],
+                                                 light_color,
+                                                 image[coordinate[0]][coordinate[1]],
+                                                 convolution_image_red[coordinate[0]][coordinate[1]]
+                                                 ], tfl))
 
-    # c = np.argwhere(new_conv > 100000)
-    #
-    # for y, x in c:
-    #     print(y, x, new_conv[y][x])
-    # print(c)
-    #
-    # plt.imshow(new_conv)
-    # plt.plot(c[:, 1], c[:, 0], 'r.')
-    # plt.autoscale(False)
-    # plt.axis('off')
-    # plt.show()
-
-    return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
+    return tfl_with_info, tfl
 
 
 ### GIVEN CODE TO TEST YOUR IMPLENTATION AND PLOT THE PICTURES
@@ -134,9 +155,9 @@ def main(argv=None):
     kernel_green_light = kernels_creator(image_for_green_kernel[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
                                          threshold=180)
 
-    paths = ['Test/berlin_000522_000019_leftImg8bit.png',
+    paths = ['Test/berlin_000540_000019_leftImg8bit.png',
+             'Test/berlin_000522_000019_leftImg8bit.png',
              'Test/berlin_000455_000019_leftImg8bit.png',
-             'Test/berlin_000540_000019_leftImg8bit.png',
              'Test/bremen_000145_000019_leftImg8bit.png',
              'Test/darmstadt_000053_000019_leftImg8bit.png',
              'Test/jena_000032_000019_leftImg8bit.png',
@@ -169,7 +190,7 @@ def main(argv=None):
     # parser.add_argument('-d', '--dir', type=str, help='Directory to scan images in')
     # args = parser.parse_args(argv)
     # default_base = "INSERT_YOUR_DIR_WITH_PNG_AND_JSON_HERE"
-
+    #
     # if args.dir is None:
     #     args.dir = default_base
     # flist = glob.glob(os.path.join(args.dir, '*_leftImg8bit.png'))
@@ -180,7 +201,7 @@ def main(argv=None):
     #     if not os.path.exists(json_fn):
     #         json_fn = None
     #     test_find_tfl_lights(image, json_fn)
-
+    #
     # if len(flist):
     #     print("You should now see some images, with the ground truth marked on them. Close all to quit.")
     # else:
