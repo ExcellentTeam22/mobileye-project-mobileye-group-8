@@ -1,4 +1,4 @@
-THRESHOLD = 200
+from Kernel import Kernel
 
 try:
     import scipy
@@ -19,6 +19,43 @@ except ImportError:
     raise
 
 
+def open_image_as_np_array(path: str):
+    """
+    Opens image from a given path and convert it to a NumPy array (matrix of RGB).
+    :param path: The path to the requested image.
+    :return: A NumPy array that represent the image as a 3D array of RGB.
+    """
+    return np.array(Image.open(path), np.float64)
+
+
+def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
+    """
+    This function create a kernel from a given image as np.array object and the relevant coordinates.
+    :param image: Source image for extracting kernel
+    :param start_y: The start point on the y axis of the kernel.
+    :param end_y: The end point on the y axis of the kernel.
+    :param start_x: The start point on the x axis of the kernel.
+    :param end_x: The end point on the x axis of the kernel.
+    :param threshold: The requested threshold for the normalization process of the kernel.
+    :return: A Kernel object that represent the requested kernel according to the given information.
+    """
+    return Kernel(threshold, image[start_y:end_y, start_x:end_x].copy())
+
+
+def display_figures(original_image, grey_scaling_image, convolution_image):
+    # Displays original image and the convolution image.
+    fig = plt.figure()
+    ax = fig.add_subplot(3, 1, 1)
+    ax.imshow(original_image)
+    ax.autoscale(False)
+    ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
+    ax2.imshow(grey_scaling_image)
+    ax2.autoscale(False)
+    ax3 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
+    ax3.imshow(convolution_image)
+    ax3.autoscale(False)
+
+
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
     Detect candidates for TFL lights. Use c_image, kwargs and you imagination to implement
@@ -28,6 +65,26 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
     ### WRITE YOUR CODE HERE ###
     ### USE HELPER FUNCTIONS ###
+
+    convolution_image_red = kwargs["kernel_red_light"].convolution(c_image[:, :, 0].copy())
+    convolution_image_green = kwargs["kernel_green_light"].convolution(c_image[:, :, 1].copy())
+
+    display_figures(c_image, convolution_image_red, convolution_image_green)
+
+    new_conv = maximum_filter(convolution_image_green, 5)
+
+    c = np.argwhere( new_conv > 100000 )
+
+    for y, x in c:
+        print(y, x, new_conv[y][x])
+    print(c)
+
+    plt.imshow(new_conv)
+    plt.plot(c[:, 1], c[:, 0], 'r.')
+    plt.autoscale(False)
+    plt.axis('off')
+    plt.show()
+
     return [500, 510, 520], [500, 500, 500], [700, 710], [500, 500]
 
 
@@ -64,83 +121,45 @@ def test_find_tfl_lights(image_path, json_path=None, fig_num=None):
     plt.plot(green_x, green_y, 'ro', color='g', markersize=4)
 
 
-def normalize_kernel(kernel_before_normalization, threshold):
-    matrix_sum, to_divide = calculate_matrix_sum(kernel_before_normalization, threshold)
-    neg_value = matrix_sum / to_divide
-    kernel = decrease_values(-neg_value, kernel_before_normalization, threshold)
-    return kernel
-
-def calculate_matrix_sum(image_arr, threshold):
-
-    cells_in_threshold_sum = 0
-    cells_not_in_threshold = 0
-
-    for row in image_arr:
-        for number in row:
-            if number > threshold:
-                cells_in_threshold_sum += number
-            else:
-                cells_not_in_threshold += 1
-    return cells_in_threshold_sum, cells_not_in_threshold
-
-
-def decrease_values(neg_value, kernel, threshold):
-
-    for index_row, row in enumerate(kernel):
-        for index_col, number in enumerate(row):
-            if number <= threshold:
-                kernel[index_row][index_col] = neg_value
-    return kernel
-
-
-def display_figures(original_image, grey_scaling_image, convolution_image):
-    # Displays original image and the convolution image.
-    fig = plt.figure()
-    ax = fig.add_subplot(3, 1, 1)
-    ax.imshow(original_image)
-    ax.autoscale(False)
-    ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(grey_scaling_image)
-    ax2.autoscale(False)
-    ax3 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
-    ax3.imshow(convolution_image)
-    ax3.autoscale(False)
-
-
-def display_img_and_convolve_image(paths: list, kernel_red_light, kernel_green_light):
-    for path in paths:
-        original_image = np.array(Image.open(path))
-
-        convolution_image_red = scipy.signal.convolve(original_image[:, :, 0].copy(), kernel_red_light, mode='same')
-        convolution_image_green = scipy.signal.convolve(original_image[:, :, 1].copy(), kernel_green_light, mode='same')
-
-        display_figures(original_image, convolution_image_red, convolution_image_green)
-
-
-def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
-    kernel_before_normalization = image[start_y:end_y, start_x:end_x].copy()
-    return normalize_kernel(kernel_before_normalization, threshold)
-
-
 def main(argv=None):
     """It's nice to have a standalone tester for the algorithm.
     Consider looping over some images from here, so you can manually exmine the results
     Keep this functionality even after you have all system running, because you sometime want to debug/improve a module
     :param argv: In case you want to programmatically run this"""
 
-    image_array = np.array(Image.open('Test/berlin_000540_000019_leftImg8bit.png'), np.float64)
-    image_array3 = np.array(Image.open('Test/berlin_000455_000019_leftImg8bit.png'), np.float64)
+    image_array = open_image_as_np_array('Test/berlin_000540_000019_leftImg8bit.png')
+    image_array3 = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
     kernel_red_light = kernels_creator(image_array[:, :, 0], start_y=217, end_y=231, start_x=1093, end_x=1105,
                                        threshold=220)
     kernel_green_light = kernels_creator(image_array3[:, :, 1], start_y=284, end_y=292, start_x=830, end_x=837,
                                          threshold=180)
 
-    paths = ['Test/berlin_000455_000019_leftImg8bit.png',
-             'Test/berlin_000522_000019_leftImg8bit.png',
+    paths = ['Test/berlin_000522_000019_leftImg8bit.png',
+             'Test/berlin_000455_000019_leftImg8bit.png',
+             'Test/berlin_000540_000019_leftImg8bit.png',
+             'Test/bremen_000145_000019_leftImg8bit.png',
+             'Test/darmstadt_000053_000019_leftImg8bit.png',
+             'Test/jena_000032_000019_leftImg8bit.png',
+             'Test/stuttgart_000004_000019_leftImg8bit.png',
+             'Test/ulm_000052_000019_leftImg8bit.png',
+             'Test/bremen_000004_000019_leftImg8bit.png',
+             'Test/darmstadt_000034_000019_leftImg8bit.png',
+             'Test/dusseldorf_000143_000019_leftImg8bit.png',
+             'Test/krefeld_000000_036299_leftImg8bit.png',
+             'Test/stuttgart_000175_000019_leftImg8bit.png',
+             'Test/zurich_000080_000019_leftImg8bit.png',
              'Test/berlin_000526_000019_leftImg8bit.png',
-             'Test/berlin_000540_000019_leftImg8bit.png']
+             'Test/bremen_000084_000019_leftImg8bit.png',
+             'Test/darmstadt_000043_000019_leftImg8bit.png',
+             'Test/hamburg_000000_067799_leftImg8bit.png',
+             'Test/tubingen_000120_000019_leftImg8bit.png',
+             ]
 
-    display_img_and_convolve_image(paths, kernel_red_light, kernel_green_light)
+    for path in paths:
+        original_image = np.array(Image.open(path))
+
+        find_tfl_lights(original_image, path=path, kernel_red_light=kernel_red_light,
+                        kernel_green_light=kernel_green_light)
 
     plt.show(block=True)
 
