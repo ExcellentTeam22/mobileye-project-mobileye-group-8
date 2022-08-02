@@ -42,19 +42,82 @@ def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
     return Kernel(threshold, image[start_y:end_y, start_x:end_x].copy())
 
 
-def display_figures(original_image, convolution_image_red, convolution_image_green):
+def display_figures(original_image, convolution_image_red, convolution_image_green,max_red, max_green, filtered_red_lights, filtered_green_lights):
     # Displays original image and the convolutions images.
-    fig = plt.figure()
-    ax = fig.add_subplot(3, 1, 1)
-    ax.imshow(original_image)
-    ax.autoscale(False)
-    ax2 = fig.add_subplot(3, 1, 2, sharex=ax, sharey=ax)
-    ax2.imshow(convolution_image_red)
-    ax2.autoscale(False)
-    ax3 = fig.add_subplot(3, 1, 3, sharex=ax, sharey=ax)
-    ax3.imshow(convolution_image_green)
-    ax3.autoscale(False)
 
+    fig = plt.figure()
+    rows = 2
+    cols = 4
+    fig.add_subplot(rows, cols, 1)
+    plt.imshow(original_image)
+    plt.axis('off')
+    plt.title("original image")
+
+    fig.add_subplot(rows, cols, 2)
+    plt.imshow(convolution_image_red)
+    plt.axis('off')
+    plt.title("convolved image")
+
+    fig.add_subplot(rows, cols, 3)
+    plt.imshow(max_red)
+    plt.axis('off')
+    plt.title("filtered by red")
+
+    fig.add_subplot(rows, cols, 4)
+    plt.imshow(original_image)
+    # plt.plot(green_lights[:, 1], green_lights[:, 0], 'g.')
+    plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+    plt.autoscale(False)
+    plt.axis('off')
+    plt.title('result')
+
+    fig.add_subplot(rows, cols, 5)
+    plt.imshow(original_image)
+    plt.axis('off')
+    plt.title("original image")
+
+    fig.add_subplot(rows, cols, 6)
+    plt.imshow(convolution_image_green)
+    plt.axis('off')
+    plt.title("convolved image")
+
+    fig.add_subplot(rows, cols, 7)
+    plt.imshow(max_green)
+    plt.axis('off')
+    plt.title("filtered by green")
+
+    fig.add_subplot(rows, cols, 8)
+    plt.imshow(original_image)
+    plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
+    plt.autoscale(False)
+    plt.axis('off')
+    plt.title("result")
+    plt.show()
+
+    # plt.imshow(original_image)
+    # plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
+    # plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+    # plt.autoscale(False)
+    # plt.axis('off')
+    # plt.show()
+
+    # plt.imshow(original_image)
+    # plt.show()
+    # plt.imshow(max_red)
+    # plt.show()
+    # fig = plt.figure()
+    # ax = fig.add_subplot(2, 1, 1)
+    # ax.imshow(original_image)
+    # ax.autoscale(False)
+    # ax2 = fig.add_subplot(2, 1, 2, sharex=ax, sharey=ax)
+    # ax2.imshow(original_image)
+    # print(red_lights)
+    # if len(green_lights) != 0:
+    #     plt.plot(green_lights[:, 1], green_lights[:, 0], 'g.')
+    # if len(red_lights) != 0:
+    #     plt.plot(red_lights[:, 1], red_lights[:, 0], 'r.')
+    # ax2.autoscale(False)
+    # plt.show()
 
 def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
@@ -67,8 +130,16 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     # Performs the convolution process on the red dimension and the green dimension of the image separately.
     convolution_image_red = kwargs["kernel_red_light"].convolution(c_image[:, :, 0].copy())
     convolution_image_green = kwargs["kernel_green_light"].convolution(c_image[:, :, 1].copy())
+    max_red=maximum_filter(convolution_image_red, 3)
+    max_green=maximum_filter(convolution_image_green,3)
+    red_lights=np.argwhere( max_red > 2000000 )
+    green_lights = np.argwhere(max_green > 50000)
+    filtered_red_lights = np.array([list(row) for row in red_lights if c_image[row[0]][row[1]][0] > c_image[row[0]][row[1]][1] + 50
+                  and c_image[row[0]][row[1]][0] > c_image[row[0]][row[1]][2] + 50])
+    filtered_green_lights = np.array([list(row) for row in green_lights if c_image[row[0]][row[1]][1] > c_image[row[0]][row[1]][0] + 30
+                   and c_image[row[0]][row[1]][2] > c_image[row[0]][row[1]][0] + 30])
+    display_figures(c_image, convolution_image_red, convolution_image_green,max_red,max_green,filtered_red_lights,filtered_green_lights)
 
-    display_figures(c_image, convolution_image_red, convolution_image_green)
 
     # new_conv = maximum_filter(convolution_image_green, 5)
 
