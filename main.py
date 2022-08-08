@@ -44,14 +44,27 @@ def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
     return Kernel(threshold, image[start_y:end_y, start_x:end_x].copy())
 
 
-def display_figures(original_image, filtered_red_lights, filtered_green_lights):
+def display_figures(original_image, filtered_red_lights, filtered_green_lights, red_rectangles, green_rectangles):
     # Displays original image and the convolutions images.
-
+    figure, ax = plt.subplots(1)
     plt.imshow(original_image)
-    if (len(filtered_green_lights) != 0):
+    if len(filtered_green_lights) != 0:
         plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
-    if (len(filtered_red_lights) != 0):
+    if len(filtered_red_lights) != 0:
         plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+
+    for rec in red_rectangles:
+        ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
+                                     , rec[1][1] - rec[0][1]
+                                     , rec[0][0] - rec[1][0],
+                                     edgecolor='r' ,
+                                     facecolor="none"))
+    for rec in green_rectangles:
+        ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
+                                   , rec[1][1] - rec[0][1]
+                                   , rec[0][0] - rec[1][0],
+                                   edgecolor='g',
+                                   facecolor="none"))
     plt.autoscale(False)
     plt.axis('off')
     plt.show()
@@ -65,8 +78,12 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
 
-    red_with_info, red_tfl = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000, kwargs["path"], "Red")
-    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000, kwargs["path"], "Green")
+    red_with_info, red_tfl, red_rectangles = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000,
+                                                                 kwargs["path"],
+                                                                 "Red")
+    green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000,
+                                                                       kwargs["path"],
+                                                                       "Green")
 
     tfl_with_info = list()
 
@@ -85,7 +102,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     db = DataBase()
     db.add(current_data_frame)
 
-    display_figures(c_image, red_tfl, green_tfl)
+    display_figures(c_image, red_tfl, green_tfl, red_rectangles, green_rectangles)
 
     if not len(red_tfl):
         return [], [], green_tfl[:, 0], green_tfl[:, 1]
@@ -95,7 +112,12 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     return red_tfl[:, 0], red_tfl[:, 1], green_tfl[:, 0], green_tfl[:, 1]
 
 
-def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str, light_color: str):
+def solve(bl, tr, p):
+    return p[1] >= bl[1] and p[1] <= tr[1] and p[0] <= bl[0] and p[0] >= tr[0]
+
+
+def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
+                           light_color: str):
     """
     The function get an image and a kernel and return all the coordinates in the image that
     meet the given threshold after a maximum filter operation.
@@ -121,8 +143,56 @@ def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, thre
                 filtered_tfl += [[row, col]]
     else:
         for row, col in tfl:
-            if image[row][col][1] > image[row][col][0] + 30 and image[row][col][2] > image[row][col][0] + 30:
+            if image[row][col][1] > image[row][col][0] + 30 and image[row][col][2] > image[row][col][0] + 30 \
+                    and image[row][col][1] > image[row][col][0] + image[row][col][2]:
                 filtered_tfl += [[row, col]]
+
+    rectangles = []
+    max_min = []
+  
+
+    for points_index, point in enumerate(filtered_tfl):
+        add_rectangle = True
+        if points_index == 0:
+            min_x = max_x = point[1]
+            min_y = max_y = point[0]
+            rectangles.append([[point[0] + 11, point[1] - 13], [point[0] - 11, point[1] + 13]])
+            max_min.append([[min_x, max_x], [min_y, max_y]])
+        else:
+            for rectangles_index, rectangle in enumerate(rectangles):
+                if solve(rectangle[0], rectangle[1], point):
+                    if max_min[rectangles_index][0][1] < point[1]:
+                        max_min[rectangles_index][0][1] = point[1]
+                    if max_min[rectangles_index][0][0] > point[1]:
+                        max_min[rectangles_index][0][0] = point[1]
+
+                    if max_min[rectangles_index][1][1] < point[0]:
+                        max_min[rectangles_index][1][1] = point[0]
+                    if max_min[rectangles_index][1][0] > point[0]:
+                        max_min[rectangles_index][1][0] = point[0]
+
+                    add_rectangle = False
+
+            if add_rectangle:
+                rectangles.append([[point[0] + 11, point[1] - 13], [point[0] - 11, point[1] + 13]])
+                min_x = max_x = point[1]
+                min_y = max_y = point[0]
+                max_min.append([[min_x, max_x], [min_y, max_y]])
+
+    for rectangles_index, rectangle in enumerate(rectangles):
+        rectangle[1][1] = max_min[rectangles_index][0][1]
+        rectangle[0][1] = max_min[rectangles_index][0][0]
+
+        rectangle[1][0] = max_min[rectangles_index][1][0]
+        rectangle[0][0] = max_min[rectangles_index][1][1]
+
+    # for rectangle in rectangles:
+    #     rectangle[0][1] -= (18 - (rectangle[1][1] - rectangle[0][1])) / 2
+    #     rectangle[1][1] += (18 - (rectangle[1][1] - rectangle[0][1])) / 2
+    #     rectangle[0][0] += (90 - (rectangle[0][0] - rectangle[1][0])) / 2
+    #     rectangle[1][0] -= (70 - (rectangle[0][0] - rectangle[1][0])) / 2
+
+
 
     tfl_with_info = list(map(lambda coordinate: [image_name,
                                                  coordinate[0],
@@ -132,7 +202,7 @@ def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, thre
                                                  convolution_image_red[coordinate[0]][coordinate[1]]
                                                  ], filtered_tfl))
 
-    return tfl_with_info, np.array(filtered_tfl)
+    return tfl_with_info, np.array(filtered_tfl), rectangles
 
 
 ### GIVEN CODE TO TEST YOUR IMPLENTATION AND PLOT THE PICTURES
@@ -183,26 +253,27 @@ def main(argv=None):
                                          end_x=1133,
                                          threshold=232)
 
-    paths = ['Test/berlin_000540_000019_leftImg8bit.png',
-             'Test/berlin_000522_000019_leftImg8bit.png',
-             'Test/berlin_000455_000019_leftImg8bit.png',
-             'Test/bremen_000145_000019_leftImg8bit.png',
-             'Test/darmstadt_000053_000019_leftImg8bit.png',
-             'Test/jena_000032_000019_leftImg8bit.png',
-             'Test/stuttgart_000004_000019_leftImg8bit.png',
-             'Test/ulm_000052_000019_leftImg8bit.png',
-             'Test/bremen_000004_000019_leftImg8bit.png',
-             'Test/darmstadt_000034_000019_leftImg8bit.png',
-             'Test/dusseldorf_000143_000019_leftImg8bit.png',
-             'Test/krefeld_000000_036299_leftImg8bit.png',
-             'Test/stuttgart_000175_000019_leftImg8bit.png',
-             'Test/zurich_000080_000019_leftImg8bit.png',
-             'Test/berlin_000526_000019_leftImg8bit.png',
-             'Test/bremen_000084_000019_leftImg8bit.png',
-             'Test/darmstadt_000043_000019_leftImg8bit.png',
-             'Test/hamburg_000000_067799_leftImg8bit.png',
-             'Test/tubingen_000120_000019_leftImg8bit.png',
-             ]
+    paths = [
+         'Test/berlin_000540_000019_leftImg8bit.png',
+        'Test/berlin_000522_000019_leftImg8bit.png',
+        'Test/berlin_000455_000019_leftImg8bit.png',
+        'Test/bremen_000145_000019_leftImg8bit.png',
+        'Test/darmstadt_000053_000019_leftImg8bit.png',
+        'Test/jena_000032_000019_leftImg8bit.png',
+        'Test/stuttgart_000004_000019_leftImg8bit.png',
+        'Test/ulm_000052_000019_leftImg8bit.png',
+        'Test/bremen_000004_000019_leftImg8bit.png',
+        'Test/darmstadt_000034_000019_leftImg8bit.png',
+        'Test/dusseldorf_000143_000019_leftImg8bit.png',
+        'Test/krefeld_000000_036299_leftImg8bit.png',
+        'Test/stuttgart_000175_000019_leftImg8bit.png',
+        'Test/zurich_000080_000019_leftImg8bit.png',
+        'Test/berlin_000526_000019_leftImg8bit.png',
+        'Test/bremen_000084_000019_leftImg8bit.png',
+        'Test/darmstadt_000043_000019_leftImg8bit.png',
+        'Test/hamburg_000000_067799_leftImg8bit.png',
+        'Test/tubingen_000120_000019_leftImg8bit.png',
+    ]
 
     for path in paths:
         original_image = np.array(Image.open(path))
