@@ -30,3 +30,6 @@ class DataBase:
         :return: None
         """
         print(self.data)
+
+    def print_to_file(self):
+        self.data.to_csv("DataBase")
