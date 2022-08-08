@@ -1,3 +1,5 @@
+import pandas
+
 from DataBase import DataBase
 from Kernel import Kernel
 
@@ -65,8 +67,10 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     :return: 4-tuple of x_red, y_red, x_green, y_green
     """
 
-    red_with_info, red_tfl = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000, kwargs["path"], "Red")
-    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000, kwargs["path"], "Green")
+    red_with_info, red_tfl = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000, kwargs["path"],
+                                                    "Red")
+    green_with_info, green_tfl = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000, kwargs["path"],
+                                                        "Green")
 
     tfl_with_info = list()
 
@@ -82,6 +86,8 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "y-coordinate", "x-coordinate",
                                                               "light", "RGB", "pixel_light"])
 
+    # cropped_data_frame = pd.DataFrame(tfl_with_info, columns=["index original image", "image","x start",
+    #                                                           "x end", "y start", "y end"])
     db = DataBase()
     db.add(current_data_frame)
 
@@ -95,7 +101,51 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     return red_tfl[:, 0], red_tfl[:, 1], green_tfl[:, 0], green_tfl[:, 1]
 
 
-def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str, light_color: str):
+def get_zoom_rect(rectangles):
+    df = pd.DataFrame([[]], columns=["Image", "y-coordinate", "x-coordinate",
+                                     "light", "RGB", "pixel_light",
+                                     "bottom left", "top right"])
+    for index, row in df.get_date().iterrows():
+        expended_rect(row, index)
+
+
+def expended_rect(row, index):
+    rect = [row["bottom left"], row["top right"]]
+    color = row["RGB"]
+    image = Image.open(row["image"])
+    rect_height = rect[0][0] - rect[1][0]
+    rect_width = rect[1][0] - rect[0][0]
+    rect[0][1] -= rect_width * 0.5
+    rect[1][1] += rect_width * 0.5
+    if color == "red":
+        rect[0][0] += rect_height * 3
+        rect[1][0] -= rect_height * 0.5
+    else:
+        rect[1][0] -= rect_height * 3
+        rect[0][0] += rect_height * 0.5
+
+    cropped_image = image.crop((rect[0][1], rect[0][0], rect[1][1], rect[1][0]))
+    cropped_image = cropped_image.resize((40, 40))
+    cropped_image.save("crop_image/" + row["image"].replace(".png", "_crop_" + index + ".png"))
+
+    zoom = get_zoom_percentage(image, rect_height * rect_width)
+    image_name = row["image"].replace(".png", "_crop_" + index + ".png")
+
+    # df = pandas.DataFrame(
+    #     [index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0]],
+    #     columns=["Image", "y-coordinate", "x-coordinate",
+    #              "original", "image crop", "zoom", "x start", "x end", "y start", "y end"])
+
+
+
+def get_zoom_percentage(image, rect_area):
+    image_x, image_y, image_z = image.shape
+    area_of_image = image_x * image_y
+    return rect_area / area_of_image
+
+
+def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
+                           light_color: str):
     """
     The function get an image and a kernel and return all the coordinates in the image that
     meet the given threshold after a maximum filter operation.
