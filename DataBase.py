@@ -10,14 +10,11 @@ This class represents a DataBase that holds all the information about tfl that f
 @singleton
 class DataBase:
     def __init__(self):
-        self.tfl_coordinate = pd.DataFrame([], columns=["Image", "y-coordinate", "x-coordinate",
+        self.tfl_coordinate = pd.DataFrame([], columns=["Image", "bottom_left", "top_right",
                                                         "light", "RGB", "pixel_light"])
-        self.crop_images = pd.DataFrame([["aachen_000035_000019_leftImg8bit.png", "crop_name", "1",
-                                          "1255", "1291", "219", "305"],
-                                         ["aachen_000035_000019_leftImg8bit.png", "crop_name", "1",
-                                          "304", "350", "219", "305"]
-                                         ], columns=["original", "crop_name", "zoom",
-                                                     "x start", "x end", "y start", "y end"])
+        self.crop_images = pd.DataFrame([]
+                                        , columns=["original", "crop_name", "zoom",
+                                                   "x start", "x end", "y start", "y end"])
 
         self.tfl_decision = pd.DataFrame([], columns=["crop_index", "decision"])
 

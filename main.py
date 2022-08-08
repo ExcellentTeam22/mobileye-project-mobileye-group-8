@@ -11,6 +11,9 @@ try:
     import argparse
     import pandas as pd
 
+    pd.set_option('display.width', 200, 'display.max_rows', 200,
+                  'display.max_columns', 200, 'max_colwidth', 40)
+
     import numpy as np
     from scipy import signal as sg
     from scipy.ndimage import maximum_filter
@@ -107,11 +110,9 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     else:
         tfl_with_info = np.concatenate([red_with_info, green_with_info])
 
-    current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "y-coordinate", "x-coordinate",
+    current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "bottom_left", "top_right",
                                                               "light", "RGB", "pixel_light"])
 
-    # cropped_data_frame = pd.DataFrame(tfl_with_info, columns=["index original image", "image","x start",
-    #                                                           "x end", "y start", "y end"])
     db = DataBase()
     db.add_tfl(current_data_frame)
 
@@ -126,43 +127,45 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
 
 
 def solve(bl, tr, p):
-    return p[1] >= bl[1] and p[1] <= tr[1] and p[0] <= bl[0] and p[0] >= tr[0]
+    return bl[1] <= p[1] <= tr[1] and bl[0] >= p[0] >= tr[0]
 
 
-def get_zoom_rect(rectangles):
-    df = pd.DataFrame([[]], columns=["Image", "y-coordinate", "x-coordinate",
-                                     "light", "RGB", "pixel_light",
-                                     "bottom left", "top right"])
-    for index, row in df.get_date().iterrows():
+def get_zoom_rect():
+    for index, row in DataBase().get_tfls_coordinates().iterrows():
         expended_rect(row, index)
+        DataBase().print_crop_images()
 
 
 def expended_rect(row, index):
-    rect = [row["bottom left"], row["top right"]]
-    color = row["RGB"]
-    image = Image.open(row["image"])
+    rect = [row["bottom_left"], row["top_right"]]
+    color = row["light"]
+
+    city = row["Image"].split('_')[0]
+
+    image = Image.open("./Resources/leftImg8bit/train/" + city + '/' + row["Image"])
     rect_height = rect[0][0] - rect[1][0]
-    rect_width = rect[1][0] - rect[0][0]
-    rect[0][1] -= rect_width * 0.5
+    rect_width = rect[1][1] - rect[0][1]
+    rect[0][1] -= rect_width * 0.7
     rect[1][1] += rect_width * 0.5
-    if color == "red":
-        rect[0][0] += rect_height * 3
-        rect[1][0] -= rect_height * 0.5
+    if color == "Red":
+        rect[0][0] += rect_width * 4.5
+        rect[1][0] -= rect_width * 1.5
     else:
-        rect[1][0] -= rect_height * 3
-        rect[0][0] += rect_height * 0.5
+        rect[1][0] -= rect_height * 5.5
+        rect[0][0] += rect_height * 2
 
-    cropped_image = image.crop((rect[0][1], rect[0][0], rect[1][1], rect[1][0]))
-    cropped_image = cropped_image.resize((40, 40))
-    cropped_image.save("crop_image/" + row["image"].replace(".png", "_crop_" + index + ".png"))
+    cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
+    cropped_image = cropped_image.resize((40, 120))
+    cropped_image.save("./Resources/CropImages/" + row["Image"].replace(".png", "_crop_" + str(index) + ".png"))
 
-    zoom = get_zoom_percentage(image, rect_height * rect_width)
-    image_name = row["image"].replace(".png", "_crop_" + index + ".png")
+    zoom = get_zoom_percentage(np.array(image), rect_height * rect_width)
+    image_name = row["Image"].replace(".png", "_crop_" + str(index) + ".png")
 
-    # df = pandas.DataFrame(
-    #     [index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0]],
-    #     columns=["Image", "y-coordinate", "x-coordinate",
-    #              "original", "image crop", "zoom", "x start", "x end", "y start", "y end"])
+    df = pandas.DataFrame(
+        [[index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0]]],
+        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end"])
+
+    DataBase().add_crop_image(df)
 
 
 def get_zoom_percentage(image, rect_area):
@@ -240,19 +243,13 @@ def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, thre
         rectangle[1][0] = max_min[rectangles_index][1][0]
         rectangle[0][0] = max_min[rectangles_index][1][1]
 
-    # for rectangle in rectangles:
-    #     rectangle[0][1] -= (18 - (rectangle[1][1] - rectangle[0][1])) / 2
-    #     rectangle[1][1] += (18 - (rectangle[1][1] - rectangle[0][1])) / 2
-    #     rectangle[0][0] += (90 - (rectangle[0][0] - rectangle[1][0])) / 2
-    #     rectangle[1][0] -= (70 - (rectangle[0][0] - rectangle[1][0])) / 2
-
-    tfl_with_info = list(map(lambda coordinate: [image_name,
-                                                 coordinate[0],
-                                                 coordinate[1],
-                                                 light_color,
-                                                 image[coordinate[0]][coordinate[1]],
-                                                 convolution_image_red[coordinate[0]][coordinate[1]]
-                                                 ], filtered_tfl))
+    tfl_with_info = list(map(lambda rect: [image_name.split('/')[-1],
+                                           rect[0],
+                                           rect[1],
+                                           light_color,
+                                           image[rect[0][0]][rect[0][1]],
+                                           convolution_image_red[rect[0][0]][rect[0][1]]
+                                           ], rectangles))
 
     return tfl_with_info, np.array(filtered_tfl), rectangles
 
@@ -264,7 +261,7 @@ def main(argv=None):
     :param argv: In case you want to programmatically run this"""
 
     # Builds the red and the green kernels.
-    image_for_red_kernel = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
+    image_for_red_kernel = open_image_as_np_array('./Resources/Kernel/berlin_000455_000019_leftImg8bit.png')
 
     kernel_red_light = kernels_creator(image_for_red_kernel[:, :, 0], start_y=257, end_y=265, start_x=1124, end_x=1133,
                                        threshold=232)
@@ -273,7 +270,7 @@ def main(argv=None):
                                          threshold=232)
 
     # Opens each PNG and start the convolution process.
-    for root, dirs, files in os.walk('./Resource/leftImg8bit/train'):
+    for root, dirs, files in os.walk('./Resources/leftImg8bit/train'):
         for file in files:
             path = root + '/' + file
             original_image = np.array(Image.open(path))
@@ -281,9 +278,9 @@ def main(argv=None):
             find_tfl_lights(original_image, path=path, kernel_red_light=kernel_red_light,
                             kernel_green_light=kernel_green_light)
 
-    db = DataBase()
-    db.print_to_file()
+    DataBase().print_tfl_coordinate()
 
 
 if __name__ == '__main__':
     main()
+    get_zoom_rect()
