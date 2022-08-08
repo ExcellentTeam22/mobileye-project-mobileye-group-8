@@ -83,7 +83,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                                               "light", "RGB", "pixel_light"])
 
     db = DataBase()
-    db.add(current_data_frame)
+    db.add_tfl(current_data_frame)
 
     display_figures(c_image, red_tfl, green_tfl)
 
