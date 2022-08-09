@@ -164,7 +164,7 @@ def expended_rect(row, index):
     image_name = row["Image"].replace(".png", "_crop_" + str(index) + ".png")
 
     df = pandas.DataFrame(
-        [[index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0],color]],
+        [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0],color]],
         columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end","color"])
 
     DataBase().add_crop_image(df)
@@ -173,7 +173,7 @@ def expended_rect(row, index):
 def get_zoom_percentage(image, rect_area):
     image_x, image_y, image_z = image.shape
     area_of_image = image_x * image_y
-    return rect_area / area_of_image
+    return rect_area / area_of_image * 100
 
 
 def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
