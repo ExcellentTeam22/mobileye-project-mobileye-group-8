@@ -59,25 +59,22 @@ def display_figures(original_image, filtered_red_lights, filtered_green_lights, 
     :param filtered_green_lights: The x,y coordinates for the detected optional traffic lights with green bulb.
     :return: None
     """
-    return
     figure, ax = plt.subplots(1)
     plt.imshow(original_image)
     if len(filtered_green_lights) != 0:
         plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
     if len(filtered_red_lights) != 0:
-        edgecolor = 'r',
-        facecolor = "none"))
-        for rec in green_rectangles:
-            ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
-
-
-plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
 
     for rec in red_rectangles:
         ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
                                    , rec[1][1] - rec[0][1]
                                    , rec[0][0] - rec[1][0],
-                                    , rec[1][1] - rec[0][1]
+                                   edgecolor='r',
+                                   facecolor="none"))
+    for rec in green_rectangles:
+        ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
+                                   , rec[1][1] - rec[0][1]
                                    , rec[0][0] - rec[1][0],
                                    edgecolor='g',
                                    facecolor="none"))
