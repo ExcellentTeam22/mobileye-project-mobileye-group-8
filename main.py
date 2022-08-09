@@ -160,8 +160,8 @@ def expended_rect(row, index):
     image_name = row["Image"].replace(".png", "_crop_" + str(index) + ".png")
 
     df = pandas.DataFrame(
-        [[index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0]]],
-        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end"])
+        [[index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0],color]],
+        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end","color"])
 
     DataBase().add_crop_image(df)
 

@@ -14,9 +14,10 @@ class DataBase:
                                                         "light", "RGB", "pixel_light"])
         self.crop_images = pd.DataFrame([]
                                         , columns=["original", "crop_name", "zoom",
-                                                   "x start", "x end", "y start", "y end"])
+                                                   "x start", "x end", "y start", "y end","col"])
 
-        self.tfl_decision = pd.DataFrame([], columns=["crop_index", "decision"])
+        self.tfl_decision = pd.DataFrame([], columns=["seq", "is_true","is_ignore", "path",
+                                                      "x0", "x1", "y0", "y1", "col"])
 
     def get_tfl(self, index):
         return self.tfl_coordinate.iloc[index]
@@ -44,6 +45,9 @@ class DataBase:
     def get_crops_images(self):
         return self.crop_images
 
+    def get_crops(self, index):
+        return self.crop_images.iloc[index]
+
     def get_tfls_decisions(self):
         return self.tfl_decision
 
@@ -69,10 +73,10 @@ class DataBase:
         print(self.tfl_decision)
 
     def export_tfls_coordinates_to_h5(self):
-        self.tfl_coordinate.to_hdf("DataBase.h5", "Traffic_Lights_Coordinates", format="table")
+        self.tfl_coordinate.to_hdf("attention_results.h5", "Traffic_Lights_Coordinates", format="table")
 
     def export_crops_images_to_h5(self):
         self.crop_images.to_hdf("DataBase.h5", "Traffic_Lights_Crops_Images", format="table")
 
     def export_tfls_decisions_to_h5(self):
-        self.tfl_decision.to_hdf("DataBase.h5", "Traffic_Lights_Decisions", format="table")
+        self.tfl_decision.to_hdf("crop_results.h5", "Traffic_Lights_Decisions", format="table")
