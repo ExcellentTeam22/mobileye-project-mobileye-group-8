@@ -95,7 +95,7 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                                                     kwargs["path"],
                                                                     "Red")
     green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1,
-                                                                          15000,
+                                                                          1100000,
                                                                           kwargs["path"],
                                                                           "Green")
 
@@ -146,14 +146,18 @@ def expended_rect(row, index):
     image = Image.open("./Resources/leftImg8bit/train/" + city + '/' + row["Image"])
     rect_height = rect[0][0] - rect[1][0]
     rect_width = rect[1][1] - rect[0][1]
-    rect[0][1] -= rect_width * 2
-    rect[1][1] += rect_width * 1
+
     if color == "Red":
+        rect[0][1] -= rect_width * 2
+        rect[1][1] += rect_width * 1
         rect[0][0] += rect_width * 5.5
         rect[1][0] -= rect_width * 1.5
     else:
-        rect[0][0] += rect_width * 1.5
-        rect[1][0] -= rect_width * 5.5
+        rect[0][1] -= rect_width * 2
+        rect[1][1] += rect_width * 2
+        rect_width = rect[1][1] - rect[0][1]
+        rect[0][0] += rect_width * 0.5
+        rect[1][0] -= rect_width * 2.5
 
     cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
     cropped_image = cropped_image.resize((40, 100))
@@ -163,8 +167,10 @@ def expended_rect(row, index):
     image_name = row["Image"].replace(".png", "_crop_" + str(index) + ".png")
 
     df = pandas.DataFrame(
-        [[index, image_name, zoom, rect[0][1], rect[1][1], rect[1][0], rect[0][0], color]],
-        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end", "color"])
+
+        [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0],color]],
+        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end","color"])
+
 
     DataBase().add_crop_image(df)
 
@@ -172,7 +178,7 @@ def expended_rect(row, index):
 def get_zoom_percentage(image, rect_area):
     image_x, image_y, image_z = image.shape
     area_of_image = image_x * image_y
-    return rect_area / area_of_image
+    return rect_area / area_of_image * 100
 
 
 def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
@@ -265,12 +271,15 @@ def main(argv=None):
 
     # Builds the red and the green kernels.
     image_for_red_kernel = open_image_as_np_array('./Resources/Kernel/berlin_000455_000019_leftImg8bit.png')
+    image_for_green_kernel = open_image_as_np_array('./Resources/Kernel/aachen_000012_000019_leftImg8bit.png')
 
+    # plt.imshow(Image.open('./Resources/Kernel/aachen_000012_000019_leftImg8bit.png'))
+    # plt.show()
     kernel_red_light = kernels_creator(image_for_red_kernel[:, :, 0], start_y=257, end_y=265, start_x=1124, end_x=1133,
                                        threshold=232)
-    kernel_green_light = kernels_creator(image_for_red_kernel[:, :, 1], start_y=257, end_y=265, start_x=1124,
-                                         end_x=1133,
-                                         threshold=232)
+    kernel_green_light = kernels_creator(image_for_green_kernel[:, :, 1], start_y=194, end_y=210, start_x=1208,
+                                         end_x=1223,
+                                         threshold=220)
 
     # Opens each PNG and start the convolution process.
     for root, dirs, files in os.walk('./Resources/leftImg8bit/train'):

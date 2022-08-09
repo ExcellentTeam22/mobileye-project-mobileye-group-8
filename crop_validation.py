@@ -25,15 +25,15 @@ def crops_validation():
         result = is_valid(row)
         if result:
 
-            decisions.append([str(index), "True", "True",image_name, x0, x1, y0, y1, col])
+            decisions.append([str(index), "True", "False", image_name, str(x0), str(x1), str(y0), str(y1), col])
         elif result == None:
-            decisions.append([str(index), "False", "True",image_name,x0, x1, y0, y1, col])
+            decisions.append([str(index), "True", "True", image_name, str(x0), str(x1), str(y0), str(y1), col])
         elif result == False:
-            decisions.append([str(index), "False", "False",image_name, x0, x1, y0, y1, col])
+            decisions.append([str(index), "False", "False", image_name, str(x0), str(x1), str(y0), str(y1), col])
 
-    db.add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true","is_ignore","path",
-                                                           "x0","x1","y0","y1","col"]))
-   # db.print_tfl_decision()
+    db.add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true", "is_ignore", "path",
+                                                           "x0", "x1", "y0", "y1", "col"]))
+    db.print_tfl_decision()
     db.export_tfls_decisions_to_h5()
 
 
@@ -79,10 +79,14 @@ def is_valid(crop_data: pd.Series):
     component_size = component_index.shape[0]
 
     result = (valid_pixels / component_size) * 100
+    area_cropped_image = color_image_crop.shape[0] * color_image_crop.shape[1]
+    if area_cropped_image == 0:
+        return False
+    # result_2 = (valid_pixels / area_cropped_image) * 100
 
-    if result > 60:
+    if result >= 70:
         return True
-    elif 35 < result < 60:
+    elif 15 < result < 70:
         return None
     else:
         return False
