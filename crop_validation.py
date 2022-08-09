@@ -15,15 +15,23 @@ def crops_validation():
     decisions = []
 
     for index, row in db.get_crops_images().iterrows():
+        image_name = DataBase().get_crops(row["original"])["crop_name"]
+        x0 = DataBase().get_crops(row["original"])["x start"]
+        x1 = DataBase().get_crops(row["original"])["x end"]
+        y0 = DataBase().get_crops(row["original"])["y start"]
+        y1 = DataBase().get_crops(row["original"])["x end"]
+        col = DataBase().get_crops(row["original"])["color"][0].lower()
+
         result = is_valid(row)
         if result:
-            decisions.append([str(index), "True", "False"])
+            decisions.append([str(index), "True", "True",image_name, str(x0), str(x1), str(y0), str(y1), col])
         elif result == None:
-            decisions.append([str(index), "True", "True"])
+            decisions.append([str(index), "False", "True",image_name,str(x0), str(x1), str(y0), str(y1), col])
         elif result == False:
-            decisions.append([str(index), "False", "False"])
+            decisions.append([str(index), "False", "False",image_name, str(x0), str(x1), str(y0), str(y1), col])
 
-    db.add_tfls_decisions(pd.DataFrame(decisions, columns=["crop_index", "is_true", "is_ignored"]))
+    db.add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true","is_ignore","path",
+                                                           "x0","x1","y0","y1","col"]))
     db.print_tfl_decision()
     db.export_tfls_decisions_to_h5()
 
