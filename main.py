@@ -161,15 +161,15 @@ def expended_rect(row, index):
 
     cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
     cropped_image = cropped_image.resize((40, 100))
-    cropped_image.save("./Resources/CropImages/" + row["Image"].replace(".png", "_crop_" + str(index) + ".png"))
+    cropped_image.save("./Resources/crops/" + row["Image"].replace(".png", "_crop_" + str(index) + ".png"))
 
     zoom = get_zoom_percentage(np.array(image), rect_height * rect_width)
     image_name = row["Image"].replace(".png", "_crop_" + str(index) + ".png")
 
     df = pandas.DataFrame(
 
-        [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0],color]],
-        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end","color"])
+        [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0], color]],
+        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end", "col"])
 
 
     DataBase().add_crop_image(df)
@@ -294,8 +294,7 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
-    db = DataBase()
-    db.print_tfl_coordinate()
     get_zoom_rect()
     crops_validation()
-    db.export_tfls_coordinates_to_h5()
+    DataBase().export_tfls_coordinates_to_h5()
+    DataBase().export_tfls_decisions_to_h5()

@@ -16,25 +16,24 @@ def crops_validation():
 
     for index, row in db.get_crops_images().iterrows():
         image_name = DataBase().get_crops(row["original"])["crop_name"]
-        x0 = DataBase().get_crops(row["original"])["x start"]
-        x1 = DataBase().get_crops(row["original"])["x end"]
-        y0 = DataBase().get_crops(row["original"])["y start"]
-        y1 = DataBase().get_crops(row["original"])["x end"]
-        col = DataBase().get_crops(row["original"])["color"][0].lower()
+
+        crop = DataBase().get_crops(row["original"])
+        x0 = crop["x start"]
+        x1 = crop["x end"]
+        y0 = crop["y start"]
+        y1 = crop["x end"]
+        col = crop["col"][0].lower()
 
         result = is_valid(row)
         if result:
-
-            decisions.append([str(index), "True", "False", image_name, str(x0), str(x1), str(y0), str(y1), col])
+            decisions.append([index, "True", "False", image_name, x0, x1, y0, y1, col])
         elif result == None:
-            decisions.append([str(index), "True", "True", image_name, str(x0), str(x1), str(y0), str(y1), col])
+            decisions.append([index, "True", "True", image_name, x0, x1, y0, y1, col])
         elif result == False:
-            decisions.append([str(index), "False", "False", image_name, str(x0), str(x1), str(y0), str(y1), col])
+            decisions.append([index, "False", "False", image_name, x0, x1, y0, y1, col])
 
     db.add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true", "is_ignore", "path",
                                                            "x0", "x1", "y0", "y1", "col"]))
-    db.print_tfl_decision()
-    db.export_tfls_decisions_to_h5()
 
 
 def is_valid(crop_data: pd.Series):
@@ -53,7 +52,6 @@ def is_valid(crop_data: pd.Series):
     color_image_crop = color_image[int(crop_data["y start"]):int(crop_data["y end"]),
                        int(crop_data["x start"]):int(crop_data["x end"])]
 
-    all_labels = measure.label(label_image)
     blobs_labels = measure.label(label_image, background=0)
 
     first_tfl_pixel = None

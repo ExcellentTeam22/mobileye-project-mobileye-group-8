@@ -74,9 +74,7 @@ class DataBase:
         print(self.tfl_decision)
 
     def export_tfls_coordinates_to_h5(self):
-        df = pd.DataFrame([], columns=["Image", "y_bottom_left", "x_bottom_left",
-                                                              "y_top_right", "x_top_right",
-                                                              "light", "RGB", "pixel_light"])
+        df = self.tfl_coordinate
 
         df["x_bottom_left"] = df["x_bottom_left"].astype(int)
         df["y_bottom_left"] = df["y_bottom_left"].astype(int)
@@ -88,11 +86,10 @@ class DataBase:
         df["Image"] = df["Image"].astype(str)
         df["light"] = df["light"].astype(str)
 
-        df.to_hdf("attention_results.h5", "Traffic_Lights_Coordinates", format="table")
+        df.to_hdf("./Resources/attention_results/attention_results.h5", "Traffic_Lights_Coordinates", format="table")
 
     def export_crops_images_to_h5(self):
-        df = pd.DataFrame([], columns=["original", "crop_name", "zoom",
-                                                   "x start", "x end", "y start", "y end", "col"])
+        df = self.crop_images
 
         df["x start"] = df["x start"].astype(int)
         df["x end"] = df["x end"].astype(int)
@@ -104,11 +101,10 @@ class DataBase:
         df["original"] = df["original"].astype(str)
         df["crop_name"] = df["crop_name"].astype(str)
 
-        df.to_hdf("crop_results.h5", "Traffic_Lights_Coordinates", format="table")
+        df.to_hdf("./Resources/attention_results/crop_results0.h5", "Traffic_Lights_Coordinates", format="table")
 
     def export_tfls_decisions_to_h5(self):
-        df = pd.DataFrame([],  columns=["seq", "is_true", "is_ignore", "path",
-                                                      "x0", "x1", "y0", "y1", "col"])
+        df = self.tfl_decision
 
         df["seq"] = df["seq"].astype(int)
         df["is_true"] = df["is_true"].astype(str)
@@ -124,5 +120,5 @@ class DataBase:
 
         df["path"] = df["path"].astype(str)
 
-        df.to_hdf("crop_results0.h5", "crop_results0", format="table")
+        df.to_hdf("./Resources/attention_results/crop_results.h5", "crop_results0", format="table")
 
