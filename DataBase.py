@@ -10,13 +10,14 @@ This class represents a DataBase that holds all the information about tfl that f
 @singleton
 class DataBase:
     def __init__(self):
-        self.tfl_coordinate = pd.DataFrame([], columns=["Image", "bottom_left", "top_right",
-                                                        "light", "RGB", "pixel_light"])
+        self.tfl_coordinate = pd.DataFrame([], columns=["Image", "y_bottom_left", "x_bottom_left",
+                                                              "y_top_right", "x_top_right",
+                                                              "light", "RGB", "pixel_light"])
         self.crop_images = pd.DataFrame([]
                                         , columns=["original", "crop_name", "zoom",
-                                                   "x start", "x end", "y start", "y end","col"])
+                                                   "x start", "x end", "y start", "y end", "col"])
 
-        self.tfl_decision = pd.DataFrame([], columns=["seq", "is_true","is_ignore", "path",
+        self.tfl_decision = pd.DataFrame([], columns=["seq", "is_true", "is_ignore", "path",
                                                       "x0", "x1", "y0", "y1", "col"])
 
     def get_tfl(self, index):
@@ -73,10 +74,55 @@ class DataBase:
         print(self.tfl_decision)
 
     def export_tfls_coordinates_to_h5(self):
-        self.tfl_coordinate.to_hdf("attention_results.h5", "Traffic_Lights_Coordinates", format="table")
+        df = pd.DataFrame([], columns=["Image", "y_bottom_left", "x_bottom_left",
+                                                              "y_top_right", "x_top_right",
+                                                              "light", "RGB", "pixel_light"])
+
+        df["x_bottom_left"] = df["x_bottom_left"].astype(int)
+        df["y_bottom_left"] = df["y_bottom_left"].astype(int)
+
+        df["x_top_right"] = df["x_top_right"].astype(int)
+        df["y_top_right"] = df["y_top_right"].astype(int)
+        df["RGB"] = df["RGB"].astype(str)
+        df["pixel_light"] = df["pixel_light"].astype(float)
+        df["Image"] = df["Image"].astype(str)
+        df["light"] = df["light"].astype(str)
+
+        df.to_hdf("attention_results.h5", "Traffic_Lights_Coordinates", format="table")
 
     def export_crops_images_to_h5(self):
-        self.crop_images.to_hdf("DataBase.h5", "Traffic_Lights_Crops_Images", format="table")
+        df = pd.DataFrame([], columns=["original", "crop_name", "zoom",
+                                                   "x start", "x end", "y start", "y end", "col"])
+
+        df["x start"] = df["x start"].astype(int)
+        df["x end"] = df["x end"].astype(int)
+
+        df["y start"] = df["y start"].astype(int)
+        df["y end"] = df["y end"].astype(int)
+        df["col"] = df["col"].astype(str)
+        df["zoom"] = df["zoom"].astype(float)
+        df["original"] = df["original"].astype(str)
+        df["crop_name"] = df["crop_name"].astype(str)
+
+        df.to_hdf("crop_results.h5", "Traffic_Lights_Coordinates", format="table")
 
     def export_tfls_decisions_to_h5(self):
-        self.tfl_decision.to_hdf("crop_results.h5", "Traffic_Lights_Decisions", format="table")
+        df = pd.DataFrame([],  columns=["seq", "is_true", "is_ignore", "path",
+                                                      "x0", "x1", "y0", "y1", "col"])
+
+        df["seq"] = df["seq"].astype(int)
+        df["is_true"] = df["is_true"].astype(str)
+        df["is_ignore"] = df["is_ignore"].astype(str)
+
+        df["x0"] = df["x0"].astype(int)
+        df["x1"] = df["x1"].astype(int)
+
+        df["y0"] = df["y0"].astype(int)
+        df["y1"] = df["y1"].astype(int)
+
+        df["col"] = df["col"].astype(str)
+
+        df["path"] = df["path"].astype(str)
+
+        df.to_hdf("crop_results0.h5", "crop_results0", format="table")
+
