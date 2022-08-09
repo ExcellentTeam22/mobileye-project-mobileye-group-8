@@ -15,10 +15,13 @@ def crops_validation():
     decisions = []
 
     for index, row in db.get_crops_images().iterrows():
-        if is_valid(row):
-            decisions.append([str(index), "True"])
-        else:
-            decisions.append([str(index), "False"])
+        result = is_valid(row)
+        if result:
+            decisions.append([str(index), "True", "True"])
+        elif result == None:
+            decisions.append([str(index), "False", "True"])
+        elif result == False:
+            decisions.append([str(index), "False", "False"])
 
     db.add_tfls_decisions(pd.DataFrame(decisions, columns=["crop_index", "decision"]))
     db.print_tfl_decision()
@@ -68,8 +71,10 @@ def is_valid(crop_data: pd.Series):
 
     result = (valid_pixels / component_size) * 100
 
-    if result > 35:
+    if result > 60:
         return True
+    elif 35 < result < 60:
+        return None
     else:
         return False
 
