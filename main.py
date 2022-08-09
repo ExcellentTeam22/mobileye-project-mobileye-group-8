@@ -10,6 +10,7 @@ try:
     import glob
     import argparse
     import pandas as pd
+    from crop_validation import crops_validation
 
     pd.set_option('display.width', 200, 'display.max_rows', 200,
                   'display.max_columns', 200, 'max_colwidth', 40)
@@ -58,23 +59,25 @@ def display_figures(original_image, filtered_red_lights, filtered_green_lights, 
     :param filtered_green_lights: The x,y coordinates for the detected optional traffic lights with green bulb.
     :return: None
     """
-
+    return
     figure, ax = plt.subplots(1)
     plt.imshow(original_image)
     if len(filtered_green_lights) != 0:
         plt.plot(filtered_green_lights[:, 1], filtered_green_lights[:, 0], 'g.')
     if len(filtered_red_lights) != 0:
-        plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
+        edgecolor = 'r',
+        facecolor = "none"))
+        for rec in green_rectangles:
+            ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
+
+
+plt.plot(filtered_red_lights[:, 1], filtered_red_lights[:, 0], 'r.')
 
     for rec in red_rectangles:
         ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
                                    , rec[1][1] - rec[0][1]
                                    , rec[0][0] - rec[1][0],
-                                   edgecolor='r',
-                                   facecolor="none"))
-    for rec in green_rectangles:
-        ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
-                                   , rec[1][1] - rec[0][1]
+                                    , rec[1][1] - rec[0][1]
                                    , rec[0][0] - rec[1][0],
                                    edgecolor='g',
                                    facecolor="none"))
@@ -95,18 +98,16 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
                                                                     kwargs["path"],
                                                                     "Red")
     green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1,
-                                                                          18000,
+                                                                          15000,
                                                                           kwargs["path"],
                                                                           "Green")
-
-    tfl_with_info = list()
 
     if not len(red_tfl) and not len(green_tfl):
         return [], [], [], []
     elif not len(red_tfl):
-        tfl_with_info = red_with_info
-    elif not len(green_tfl):
         tfl_with_info = green_with_info
+    elif not len(green_tfl):
+        tfl_with_info = red_with_info
     else:
         tfl_with_info = np.concatenate([red_with_info, green_with_info])
 
@@ -133,7 +134,7 @@ def solve(bl, tr, p):
 def get_zoom_rect():
     for index, row in DataBase().get_tfls_coordinates().iterrows():
         expended_rect(row, index)
-        DataBase().print_crop_images()
+        # DataBase().print_crop_images()
 
 
 def expended_rect(row, index):
@@ -145,17 +146,17 @@ def expended_rect(row, index):
     image = Image.open("./Resources/leftImg8bit/train/" + city + '/' + row["Image"])
     rect_height = rect[0][0] - rect[1][0]
     rect_width = rect[1][1] - rect[0][1]
-    rect[0][1] -= rect_width * 0.7
-    rect[1][1] += rect_width * 0.5
+    rect[0][1] -= rect_width * 2
+    rect[1][1] += rect_width * 1
     if color == "Red":
-        rect[0][0] += rect_width * 4.5
+        rect[0][0] += rect_width * 5.5
         rect[1][0] -= rect_width * 1.5
     else:
-        rect[1][0] -= rect_height * 5.5
-        rect[0][0] += rect_height * 2
+        rect[0][0] += rect_width * 1.5
+        rect[1][0] -= rect_width * 5.5
 
     cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
-    cropped_image = cropped_image.resize((40, 120))
+    cropped_image = cropped_image.resize((40, 100))
     cropped_image.save("./Resources/CropImages/" + row["Image"].replace(".png", "_crop_" + str(index) + ".png"))
 
     zoom = get_zoom_percentage(np.array(image), rect_height * rect_width)
@@ -278,9 +279,7 @@ def main(argv=None):
             find_tfl_lights(original_image, path=path, kernel_red_light=kernel_red_light,
                             kernel_green_light=kernel_green_light)
 
-    DataBase().print_tfl_coordinate()
-
-
 if __name__ == '__main__':
     main()
     get_zoom_rect()
+    crops_validation()

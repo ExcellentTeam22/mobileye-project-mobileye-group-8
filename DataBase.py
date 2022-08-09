@@ -18,6 +18,9 @@ class DataBase:
 
         self.tfl_decision = pd.DataFrame([], columns=["crop_index", "decision"])
 
+    def get_tfl(self, index):
+        return self.tfl_coordinate.iloc[index]
+
     def add_tfl(self, df: pd.DataFrame):
         """
         Adds a given DataFrame to the database.
