@@ -1,9 +1,8 @@
-<<<<<<< Updated upstream
-=======
+
 import pandas
 import torch
 
->>>>>>> Stashed changes
+
 from DataBase import DataBase
 from Kernel import Kernel
 import data_utils as du
@@ -16,6 +15,10 @@ try:
     import glob
     import argparse
     import pandas as pd
+    from crop_validation import crops_validation
+
+    pd.set_option('display.width', 200, 'display.max_rows', 200,
+                  'display.max_columns', 200, 'max_colwidth', 40)
 
     import numpy as np
     from scipy import signal as sg
@@ -52,9 +55,7 @@ def kernels_creator(image, start_y, end_y, start_x, end_x, threshold):
     return Kernel(threshold, image[start_y:end_y, start_x:end_x].copy())
 
 
-
 def display_figures(original_image, filtered_red_lights, filtered_green_lights, red_rectangles, green_rectangles):
-
     """
     Displays original image and the convolutions images with green and red dots
     that indicates what the program founded has traffic lights.
@@ -63,11 +64,9 @@ def display_figures(original_image, filtered_red_lights, filtered_green_lights, 
     :param filtered_green_lights: The x,y coordinates for the detected optional traffic lights with green bulb.
     :return: None
     """
-<<<<<<< Updated upstream
 
-=======
     return
->>>>>>> Stashed changes
+
     figure, ax = plt.subplots(1)
     plt.imshow(original_image)
     if len(filtered_green_lights) != 0:
@@ -77,10 +76,10 @@ def display_figures(original_image, filtered_red_lights, filtered_green_lights, 
 
     for rec in red_rectangles:
         ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
-                                     , rec[1][1] - rec[0][1]
-                                     , rec[0][0] - rec[1][0],
-                                     edgecolor='r' ,
-                                     facecolor="none"))
+                                   , rec[1][1] - rec[0][1]
+                                   , rec[0][0] - rec[1][0],
+                                   edgecolor='r',
+                                   facecolor="none"))
     for rec in green_rectangles:
         ax.add_patch(plt.Rectangle((rec[0][1], rec[1][0])
                                    , rec[1][1] - rec[0][1]
@@ -101,43 +100,33 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
 
     red_with_info, red_tfl, red_rectangles = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000,
-<<<<<<< Updated upstream
-                                                                 kwargs["path"],
-                                                                 "Red")
-    green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000,
-                                                                       kwargs["path"],
-                                                                       "Green")
-=======
                                                                     kwargs["path"],
                                                                     "r")
     green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1,
                                                                           1100000,
                                                                           kwargs["path"],
                                                                           "g")
->>>>>>> Stashed changes
 
-    tfl_with_info = list()
+
+
+
+    g = green_with_info.copy()
 
     if not len(red_tfl) and not len(green_tfl):
         return [], [], [], []
     elif not len(red_tfl):
-        tfl_with_info = red_with_info
-    elif not len(green_tfl):
         tfl_with_info = green_with_info
+    elif not len(green_tfl):
+        tfl_with_info = red_with_info
     else:
         tfl_with_info = np.concatenate([red_with_info, green_with_info])
 
-<<<<<<< Updated upstream
-    current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "y-coordinate", "x-coordinate",
-                                                              "light", "RGB", "pixel_light"])
-=======
+
     current_data_frame = pd.DataFrame(tfl_with_info, columns=["path", "y_bottom_left", "x_bottom_left",
                                                               "y_top_right", "x_top_right",
                                                               "col", "RGB", "pixel_light"])
->>>>>>> Stashed changes
-
     db = DataBase()
-    db.add(current_data_frame)
+    db.add_tfl(current_data_frame)
 
     display_figures(c_image, red_tfl, green_tfl, red_rectangles, green_rectangles)
 
@@ -150,9 +139,6 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
 
 
 def solve(bl, tr, p):
-<<<<<<< Updated upstream
-    return p[1] >= bl[1] and p[1] <= tr[1] and p[0] <= bl[0] and p[0] >= tr[0]
-=======
     return bl[1] <= p[1] <= tr[1] and bl[0] >= p[0] >= tr[0]
 
 
@@ -186,10 +172,12 @@ def expended_rect(row, index):
 
     cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
     cropped_image = cropped_image.resize((40, 100))
+
     cropped_image.save("./Resources/crops/" + row["path"].replace(".png", "_crop_" + str(index) + ".png"))
 
     zoom = get_zoom_percentage(np.array(image), rect_height * rect_width)
     image_name = row["path"].replace(".png", "_crop_" + str(index) + ".png")
+
 
     df = pandas.DataFrame(
 
@@ -204,7 +192,7 @@ def get_zoom_percentage(image, rect_area):
     image_x, image_y, image_z = image.shape
     area_of_image = image_x * image_y
     return rect_area / area_of_image * 100
->>>>>>> Stashed changes
+
 
 
 def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
@@ -240,7 +228,6 @@ def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, thre
 
     rectangles = []
     max_min = []
-  
 
     for points_index, point in enumerate(filtered_tfl):
         add_rectangle = True
@@ -277,21 +264,15 @@ def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, thre
         rectangle[1][0] = max_min[rectangles_index][1][0]
         rectangle[0][0] = max_min[rectangles_index][1][1]
 
-    # for rectangle in rectangles:
-    #     rectangle[0][1] -= (18 - (rectangle[1][1] - rectangle[0][1])) / 2
-    #     rectangle[1][1] += (18 - (rectangle[1][1] - rectangle[0][1])) / 2
-    #     rectangle[0][0] += (90 - (rectangle[0][0] - rectangle[1][0])) / 2
-    #     rectangle[1][0] -= (70 - (rectangle[0][0] - rectangle[1][0])) / 2
-
-
-
-    tfl_with_info = list(map(lambda coordinate: [image_name,
-                                                 coordinate[0],
-                                                 coordinate[1],
-                                                 light_color,
-                                                 image[coordinate[0]][coordinate[1]],
-                                                 convolution_image_red[coordinate[0]][coordinate[1]]
-                                                 ], filtered_tfl))
+    tfl_with_info = list(map(lambda rect: [image_name.split('/')[-1],
+                                           rect[0][0],
+                                           rect[0][1],
+                                           rect[1][0],
+                                           rect[1][1],
+                                           light_color,
+                                           image[rect[0][0]][rect[0][1]],
+                                           convolution_image_red[rect[0][0]][rect[0][1]]
+                                           ], rectangles))
 
     return tfl_with_info, np.array(filtered_tfl), rectangles
 
@@ -303,34 +284,29 @@ def main(argv=None):
     :param argv: In case you want to programmatically run this"""
 
     # Builds the red and the green kernels.
-    image_for_red_kernel = open_image_as_np_array('Test/berlin_000455_000019_leftImg8bit.png')
+    image_for_red_kernel = open_image_as_np_array('./Resources/Kernel/berlin_000455_000019_leftImg8bit.png')
+    image_for_green_kernel = open_image_as_np_array('./Resources/Kernel/aachen_000012_000019_leftImg8bit.png')
 
+    # plt.imshow(Image.open('./Resources/Kernel/aachen_000012_000019_leftImg8bit.png'))
+    # plt.show()
     kernel_red_light = kernels_creator(image_for_red_kernel[:, :, 0], start_y=257, end_y=265, start_x=1124, end_x=1133,
                                        threshold=232)
-    kernel_green_light = kernels_creator(image_for_red_kernel[:, :, 1], start_y=257, end_y=265, start_x=1124,
-                                         end_x=1133,
-                                         threshold=232)
-
-
+    kernel_green_light = kernels_creator(image_for_green_kernel[:, :, 1], start_y=194, end_y=210, start_x=1208,
+                                         end_x=1223,
+                                         threshold=220)
 
     # Opens each PNG and start the convolution process.
-    for root, dirs, files in os.walk('./Resource/leftImg8bit/train'):
+    for root, dirs, files in os.walk('./Resources/leftImg8bit/train'):
         for file in files:
             path = root + '/' + file
             original_image = np.array(Image.open(path))
 
-
             find_tfl_lights(original_image, path=path, kernel_red_light=kernel_red_light,
                             kernel_green_light=kernel_green_light)
-
-    db = DataBase()
-    db.print_to_file()
+            db = DataBase()
 
 
 if __name__ == '__main__':
-<<<<<<< Updated upstream
-    main()
-=======
     # main()
     # get_zoom_rect()
     # crops_validation()
@@ -342,4 +318,4 @@ if __name__ == '__main__':
     td.train_a_model(NN, train_dataset, test_dataset, log_dir='Resources/log_dir', num_epochs=30)
 
 
->>>>>>> Stashed changes
+

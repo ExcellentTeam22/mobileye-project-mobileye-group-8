@@ -5,12 +5,12 @@ import pandas as pd
 """
 This class represents a DataBase that holds all the information about tfl that founds by the program.
 """
+
+
 @singleton
 class DataBase:
     def __init__(self):
-<<<<<<< Updated upstream
-        self.data = pd.DataFrame([], columns=["Image", "y-coordinate", "x-coordinate", "light", "RGB", "pixel_light"])
-=======
+
         self.tfl_coordinate = pd.DataFrame([], columns=["path", "y_bottom_left", "x_bottom_left",
                                                               "y_top_right", "x_top_right",
                                                               "col", "RGB", "pixel_light"])
@@ -23,30 +23,58 @@ class DataBase:
 
     def get_tfl(self, index):
         return self.tfl_coordinate.iloc[index]
->>>>>>> Stashed changes
 
-    def add(self, df: pd.DataFrame):
+    def get_tfl(self, index):
+        return self.tfl_coordinate.iloc[index]
+
+    def add_tfl(self, df: pd.DataFrame):
         """
         Adds a given DataFrame to the database.
         :param df: The requested DataFrame to has to the database.
         :return: None
         """
-        self.data = pd.concat([self.data, df], ignore_index=True)
+        self.tfl_coordinate = pd.concat([self.tfl_coordinate, df], ignore_index=True)
 
-    def get_data(self):
+    def add_crop_image(self, df: pd.DataFrame):
+        self.crop_images = pd.concat([self.crop_images, df], ignore_index=True)
+
+    def add_tfls_decisions(self, df: pd.DataFrame):
+        self.tfl_decision = pd.concat([self.tfl_decision, df], ignore_index=True)
+
+    def get_tfls_coordinates(self):
         """
         :return: DataBase
         """
-        return self.data
+        return self.tfl_coordinate
 
-    def print_data_base(self):
+    def get_crops_images(self):
+        return self.crop_images
+
+    def get_crops(self, index):
+        return self.crop_images.iloc[index]
+
+    def get_tfls_decisions(self):
+        return self.tfl_decision
+
+    def print_tfl_coordinate(self):
         """
-        Prints the DataBase.
+        Prints the tfl_coordinate table.
         :return: None
         """
-<<<<<<< Updated upstream
-        print(self.data)
-=======
+        print(self.tfl_coordinate)
+
+    def print_crop_images(self):
+        """
+        Prints the crop_images table.
+        :return: None
+        """
+        print(self.crop_images)
+
+    def print_tfl_decision(self):
+        """
+        Prints the tfl_decision table.
+        :return: None
+        """
         print(self.tfl_decision)
 
     def export_tfls_coordinates_to_h5(self):
@@ -61,6 +89,7 @@ class DataBase:
         df["pixel_light"] = df["pixel_light"].astype(float)
         df["path"] = df["path"].astype(str)
         df["col"] = df["col"].astype(str)
+
 
         df.to_hdf("./Resources/attention_results/attention_results.h5", "Traffic_Lights_Coordinates", format="table")
 
@@ -97,7 +126,5 @@ class DataBase:
         df["path"] = df["path"].astype(str)
 
         df.to_hdf("./Resources/attention_results/crop_results.h5", "crop_results0", format="table")
->>>>>>> Stashed changes
 
-    def print_to_file(self):
-        self.data.to_csv("DataBase")
+
