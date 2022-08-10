@@ -1,6 +1,14 @@
+<<<<<<< Updated upstream
+=======
+import pandas
+import torch
+
+>>>>>>> Stashed changes
 from DataBase import DataBase
 from Kernel import Kernel
-
+import data_utils as du
+import tensorflow as tf
+import train_demo as td
 try:
     import scipy
     import os
@@ -55,7 +63,11 @@ def display_figures(original_image, filtered_red_lights, filtered_green_lights, 
     :param filtered_green_lights: The x,y coordinates for the detected optional traffic lights with green bulb.
     :return: None
     """
+<<<<<<< Updated upstream
 
+=======
+    return
+>>>>>>> Stashed changes
     figure, ax = plt.subplots(1)
     plt.imshow(original_image)
     if len(filtered_green_lights) != 0:
@@ -89,11 +101,20 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     """
 
     red_with_info, red_tfl, red_rectangles = find_light_coordinates(c_image, kwargs["kernel_red_light"], 0, 300000,
+<<<<<<< Updated upstream
                                                                  kwargs["path"],
                                                                  "Red")
     green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1, 18000,
                                                                        kwargs["path"],
                                                                        "Green")
+=======
+                                                                    kwargs["path"],
+                                                                    "r")
+    green_with_info, green_tfl, green_rectangles = find_light_coordinates(c_image, kwargs["kernel_green_light"], 1,
+                                                                          1100000,
+                                                                          kwargs["path"],
+                                                                          "g")
+>>>>>>> Stashed changes
 
     tfl_with_info = list()
 
@@ -106,8 +127,14 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     else:
         tfl_with_info = np.concatenate([red_with_info, green_with_info])
 
+<<<<<<< Updated upstream
     current_data_frame = pd.DataFrame(tfl_with_info, columns=["Image", "y-coordinate", "x-coordinate",
                                                               "light", "RGB", "pixel_light"])
+=======
+    current_data_frame = pd.DataFrame(tfl_with_info, columns=["path", "y_bottom_left", "x_bottom_left",
+                                                              "y_top_right", "x_top_right",
+                                                              "col", "RGB", "pixel_light"])
+>>>>>>> Stashed changes
 
     db = DataBase()
     db.add(current_data_frame)
@@ -123,7 +150,61 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
 
 
 def solve(bl, tr, p):
+<<<<<<< Updated upstream
     return p[1] >= bl[1] and p[1] <= tr[1] and p[0] <= bl[0] and p[0] >= tr[0]
+=======
+    return bl[1] <= p[1] <= tr[1] and bl[0] >= p[0] >= tr[0]
+
+
+def get_zoom_rect():
+    for index, row in DataBase().get_tfls_coordinates().iterrows():
+        expended_rect(row, index)
+        # DataBase().print_crop_images()
+
+
+def expended_rect(row, index):
+    rect = [[row["y_bottom_left"], row["x_bottom_left"]], [row["y_top_right"], row["x_top_right"]]]
+    color = row["col"]
+
+    city = row["path"].split('_')[0]
+
+    image = Image.open("./Resources/leftImg8bit/train/" + city + '/' + row["path"])
+    rect_height = rect[0][0] - rect[1][0]
+    rect_width = rect[1][1] - rect[0][1]
+
+    if color == "r":
+        rect[0][1] -= rect_width * 2
+        rect[1][1] += rect_width * 1
+        rect[0][0] += rect_width * 5.5
+        rect[1][0] -= rect_width * 1.5
+    else:
+        rect[0][1] -= rect_width * 2
+        rect[1][1] += rect_width * 2
+        rect_width = rect[1][1] - rect[0][1]
+        rect[0][0] += rect_width * 0.5
+        rect[1][0] -= rect_width * 2.5
+
+    cropped_image = image.crop((rect[0][1], rect[1][0], rect[1][1], rect[0][0]))
+    cropped_image = cropped_image.resize((40, 100))
+    cropped_image.save("./Resources/crops/" + row["path"].replace(".png", "_crop_" + str(index) + ".png"))
+
+    zoom = get_zoom_percentage(np.array(image), rect_height * rect_width)
+    image_name = row["path"].replace(".png", "_crop_" + str(index) + ".png")
+
+    df = pandas.DataFrame(
+
+        [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0], color]],
+        columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end", "col"])
+
+
+    DataBase().add_crop_image(df)
+
+
+def get_zoom_percentage(image, rect_area):
+    image_x, image_y, image_z = image.shape
+    area_of_image = image_x * image_y
+    return rect_area / area_of_image * 100
+>>>>>>> Stashed changes
 
 
 def find_light_coordinates(image: np.array, kernel: Kernel, dimension: int, threshold: int, image_name: str,
@@ -247,4 +328,18 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
+<<<<<<< Updated upstream
     main()
+=======
+    # main()
+    # get_zoom_rect()
+    # crops_validation()
+    # DataBase().export_tfls_coordinates_to_h5()
+    # DataBase().export_tfls_decisions_to_h5()
+    train_dataset = du.TrafficLightDataSet('Resources', 'Resources/leftImg8bit/train')
+    test_dataset = du.TrafficLightDataSet('Resources', 'Resources/leftImg8bit/test', is_train=False)
+    NN = du.ModelManager.make_empty_model()
+    td.train_a_model(NN, train_dataset, test_dataset, log_dir='Resources/log_dir', num_epochs=30)
+
+
+>>>>>>> Stashed changes
