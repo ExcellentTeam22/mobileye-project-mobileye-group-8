@@ -1,11 +1,9 @@
 import numpy as np
+import pandas as pd
 from PIL import Image
 from skimage import measure
-from skimage import filters
-import matplotlib.pyplot as plt
-from DataBase import DataBase
-import pandas as pd
-import tables
+
+from DataBase import TFLCoordinateTable
 
 
 def crops_validation():
