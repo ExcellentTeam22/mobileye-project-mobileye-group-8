@@ -20,7 +20,7 @@ class CropImagesTable:
     def get_crops_images(self):
         return self.crop_images
 
-    def get_crop(self, index):
+    def get_crops(self, index):
         return self.crop_images.iloc[index]
 
     def print_crop_images(self):

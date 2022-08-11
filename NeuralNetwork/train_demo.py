@@ -10,13 +10,13 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from torch.utils.tensorboard import SummaryWriter
 
 import consts as C
-from data_utils import TrafficLightDataSet, ModelManager, MyNeuralNetworkBase
-from mpl_goodies import nn_examiner_example
+from NeuralNetwork.data_utils import TrafficLightDataSet, ModelManager, MyNeuralNetworkBase
+from NeuralNetwork.mpl_goodies import nn_examiner_example
 
 from torch import nn
 from torch.utils.data import Dataset
 
-from data_utils import device
+from NeuralNetwork.data_utils import device
 
 
 def run_one_train_epoch(model: MyNeuralNetworkBase, dataset: TrafficLightDataSet, balance_samples: bool = True):

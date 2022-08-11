@@ -3,19 +3,20 @@ import pandas as pd
 from PIL import Image
 from skimage import measure
 
-from DataBase import TFLCoordinateTable
-
+from DataBase.CropImagesTable import CropImagesTable as c_image
+from DataBase.TFLDecisionsTable import TFLDecisionsTable as d_tfl
+from DataBase.TFLCoordinateTable import TFLCoordinateTable as t_tfl
 
 def crops_validation():
     # Get Data of crop images
-    db = DataBase()
+
 
     decisions = []
 
-    for index, row in db.get_crops_images().iterrows():
-        image_name = DataBase().get_crops(row["original"])["crop_name"]
+    for index, row in c_image().get_crops_images().iterrows():
+        image_name = c_image().get_crops(row["original"])["crop_name"]
 
-        crop = DataBase().get_crops(row["original"])
+        crop = c_image().get_crops(row["original"])
         x0 = crop["x start"]
         x1 = crop["x end"]
         y0 = crop["y start"]
@@ -30,14 +31,14 @@ def crops_validation():
         elif result == False:
             decisions.append([index, False, False, image_name, x0, x1, y0, y1, col])
 
-    db.add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true", "is_ignore", "path",
+    d_tfl().add_tfls_decisions(pd.DataFrame(decisions, columns=["seq", "is_true", "is_ignore", "path",
                                                            "x0", "x1", "y0", "y1", "col"]))
 
 
 def is_valid(crop_data: pd.Series):
     # Need to build a function for the first DataBase to find original image by given index.
 
-    image_name = DataBase().get_tfl(crop_data["original"])["path"]
+    image_name = t_tfl().get_tfl(crop_data["original"])["path"]
 
     city = image_name.split('_')[0]
 

@@ -1,4 +1,5 @@
-from DataBase import DataBase
+from DataBase.TFLCoordinateTable import TFLCoordinateTable as d_tfl
+from DataBase.CropImagesTable import CropImagesTable as c_image
 import numpy as np
 from PIL import Image
 import pandas
@@ -8,7 +9,7 @@ def get_zoom_rect():
     """
     Gets rows from the database of the tfls coordinates
     """
-    for index, row in DataBase().get_tfls_coordinates().iterrows():
+    for index, row in d_tfl().get_tfls_coordinates().iterrows():
         expended_rect(row, index)
 
 
@@ -53,7 +54,7 @@ def expended_rect(row, index):
         [[index, image_name, round(zoom, 3), rect[0][1], rect[1][1], rect[1][0], rect[0][0], color]],
         columns=["original", "crop_name", "zoom", "x start", "x end", "y start", "y end", "col"])
 
-    DataBase().add_crop_image(df)
+    c_image().add_crop_image(df)
 
 
 def get_zoom_percentage(image, rect_area):

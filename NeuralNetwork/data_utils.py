@@ -10,8 +10,8 @@ from torch import nn
 from torch.utils.data import Dataset
 
 import consts as C
-from misc_goodies import temp_seed
-from mpl_goodies import plot_rects
+from NeuralNetwork.misc_goodies import temp_seed
+from NeuralNetwork.mpl_goodies import plot_rects
 
 
 pd.set_option('display.width', 200, 'display.max_rows', 200,

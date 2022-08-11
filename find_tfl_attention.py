@@ -1,11 +1,8 @@
 import pandas
 import torch
 
-from DataBase import DataBase
+from DataBase.TFLCoordinateTable import TFLCoordinateTable as tfl_coord
 from Kernel import Kernel
-import data_utils as du
-# import tensorflow as tf
-import train_demo as td
 
 try:
     import scipy
@@ -118,8 +115,8 @@ def find_tfl_lights(c_image: np.ndarray, **kwargs):
     current_data_frame = pd.DataFrame(tfl_with_info, columns=["path", "y_bottom_left", "x_bottom_left",
                                                               "y_top_right", "x_top_right",
                                                               "col", "RGB", "pixel_light"])
-    db = DataBase()
-    db.add_tfl(current_data_frame)
+
+    tfl_coord().add_tfl(current_data_frame)
 
     display_figures(c_image, red_tfl, green_tfl, red_rectangles, green_rectangles)
 
@@ -140,6 +137,23 @@ def solve(bl, tr, p):
     """
     return bl[1] <= p[1] <= tr[1] and bl[0] >= p[0] >= tr[0]
 
+def check_for_reduce(max_min,point,index):
+    """
+    this function check if there is a possible reduce in the rectangle
+    :param max_min : list of max and min coordinates
+    :param point : point to check
+    :param index : index of the current rectangle
+
+    """
+    if max_min[index][0][1] < point[1]:
+        max_min[index][0][1] = point[1]
+    if max_min[index][0][0] > point[1]:
+        max_min[index][0][0] = point[1]
+
+    if max_min[index][1][1] < point[0]:
+        max_min[index][1][1] = point[0]
+    if max_min[index][1][0] > point[0]:
+        max_min[index][1][0] = point[0]
 
 def get_rectangles(filtered_tfl: list) -> list:
     """
@@ -161,16 +175,7 @@ def get_rectangles(filtered_tfl: list) -> list:
         else:
             for rectangles_index, rectangle in enumerate(rectangles):
                 if solve(rectangle[0], rectangle[1], point):
-                    if max_min[rectangles_index][0][1] < point[1]:
-                        max_min[rectangles_index][0][1] = point[1]
-                    if max_min[rectangles_index][0][0] > point[1]:
-                        max_min[rectangles_index][0][0] = point[1]
-
-                    if max_min[rectangles_index][1][1] < point[0]:
-                        max_min[rectangles_index][1][1] = point[0]
-                    if max_min[rectangles_index][1][0] > point[0]:
-                        max_min[rectangles_index][1][0] = point[0]
-
+                    check_for_reduce(max_min,point,rectangles_index)
                     add_rectangle = False
 
             if add_rectangle:
@@ -272,7 +277,7 @@ def run_attention(argv=None):
 
             find_tfl_lights(original_image, path=path, kernel_red_light=kernel_red_light,
                             kernel_green_light=kernel_green_light)
-            db = DataBase()
+
 
 
 if __name__ == '__main__':
