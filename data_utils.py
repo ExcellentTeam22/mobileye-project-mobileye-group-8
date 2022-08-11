@@ -126,10 +126,16 @@ class MyNeuralNetworkBase(nn.Module):
     def set_net_and_loss(self):
         # Feel free to inherit this class and override this function.
         # Here are some totally useless layers. See what YOU need!
-        self.layers = (nn.Conv2d(self.num_in_channels, 5, (1, 1)),
+        self.layers = (nn.Conv2d(self.num_in_channels, 40, (7, 7)),
+                       nn.MaxPool2d(kernel_size=2, stride=2),
+                       nn.ReLU(),
+                       nn.Conv2d(40, 25, (7, 7)),
+                       nn.MaxPool2d(kernel_size=7, stride=1),
                        nn.ReLU(),
                        nn.Flatten(1, -1),
-                       nn.Linear(5 * self.w * self.h, 1),
+                       nn.Linear(4375, 20),
+                       nn.Flatten(1, -1),
+                       nn.Linear(20, 1),
                        )
 
         # This is the recommended loss:
